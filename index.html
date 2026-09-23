@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>evening</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍅</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300..800;1,6..72,300..800&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-view="gate" data-drawer="closed" data-entry="first">
+<div id="root">
+
+  <!-- ============ 1. GATE ============ -->
+  <section id="view-gate" class="gate" data-view-panel="gate" data-state="boot" aria-labelledby="gate-title">
+    <div class="gate__inner">
+      <!-- swap the <span> for <img src="assets/tomato-linocut.png" alt=""> — the slot is a fixed square -->
+      <div id="gate-tomato" class="tomato" aria-hidden="true">
+        <span class="tomato__halftone benday"></span>
+        <span class="tomato__floor"></span>
+        <div class="tomato__art" data-slot="tomato-art"><span>🍅</span></div>
+      </div>
+
+      <form id="gate-form" class="gate__form" data-gate-part="form" novalidate>
+        <h1 id="gate-title" class="gate__title">who's at the door?</h1>
+        <div class="field" data-field="name" data-state="default">
+          <label for="gate-name">name</label>
+          <input id="gate-name" name="name" type="text" autocomplete="name" required aria-describedby="gate-name-error">
+          <p id="gate-name-error" class="field__error" data-error-for="name"></p>
+        </div>
+        <div class="field" data-field="email" data-state="default">
+          <label for="gate-email">email</label>
+          <input id="gate-email" name="email" type="email" autocomplete="email" inputmode="email" required aria-describedby="gate-email-error">
+          <p id="gate-email-error" class="field__error" data-error-for="email"></p>
+        </div>
+        <div class="field" data-field="phone" data-state="default">
+          <label for="gate-phone">phone</label>
+          <input id="gate-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required aria-describedby="gate-phone-error">
+          <p id="gate-phone-error" class="field__error" data-error-for="phone"></p>
+        </div>
+        <button id="gate-enter" class="btn" type="submit" data-action="enter">
+          <span data-label="default">enter</span>
+          <span data-label="loading">knocking…</span>
+        </button>
+        <p id="gate-failed" class="gate__failed" role="alert">something went wrong on our end. try again in a moment.</p>
+        <p id="gate-fineprint" class="gate__fineprint">we don't sell or share your info. it lives in our planning sheet so we can reach you. this site keeps a small note in your browser so you stay signed in, and uses no tracking.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ NOT ON THE LIST ============ -->
+  <section id="view-not-listed" class="gate" data-view-panel="not-listed" aria-labelledby="nl-text">
+    <div class="gate__inner">
+      <div class="tomato tomato--small" aria-hidden="true">
+        <span class="tomato__halftone benday"></span>
+        <span class="tomato__floor"></span>
+        <div class="tomato__art" data-slot="tomato-art"><span>🍅</span></div>
+      </div>
+      <p id="nl-text" class="gate__message-text">thanks for stopping by, <span data-bind="guest.first">friend</span>. the organizers know you're here. if anything changes, you'll hear from us.</p>
+      <form id="nl-form" class="profile-form nl__form" data-state="idle" data-saved-msg="saved." novalidate>
+        <div class="field" data-field="name" data-state="default">
+          <label for="nl-name">name</label>
+          <input id="nl-name" name="name" type="text" autocomplete="name" aria-describedby="nl-name-error">
+          <p id="nl-name-error" class="field__error" data-error-for="name"></p>
+        </div>
+        <div class="field" data-field="email" data-state="default">
+          <label for="nl-email">email</label>
+          <input id="nl-email" name="email" type="email" autocomplete="email" aria-describedby="nl-email-error">
+          <p id="nl-email-error" class="field__error" data-error-for="email"></p>
+        </div>
+        <div class="field" data-field="phone" data-state="default">
+          <label for="nl-phone">phone</label>
+          <input id="nl-phone" name="phone" type="tel" autocomplete="tel" aria-describedby="nl-phone-error">
+          <p id="nl-phone-error" class="field__error" data-error-for="phone"></p>
+        </div>
+        <div class="field" data-field="referredBy" data-state="default">
+          <label for="nl-referred">who told you about this? <span class="field__opt">optional</span></label>
+          <input id="nl-referred" name="referredBy" type="text" autocomplete="off" maxlength="200">
+        </div>
+        <div class="save-row">
+          <button id="nl-save" class="btn" type="submit" data-role="save" data-action="save-profile">
+            <span data-label="default">save</span><span data-label="saving">saving…</span><span data-label="saved">saved ✓</span>
+          </button>
+          <p id="nl-status" class="save-status" data-role="status" aria-live="polite"></p>
+        </div>
+      </form>
+      <button id="nl-remove" class="linkish linkish--danger nl__remove" type="button" data-action="remove-me">remove me</button>
+    </div>
+  </section>
+
+  <!-- ============ GOODBYE ============ -->
+  <section id="view-goodbye" class="gate" data-view-panel="goodbye" aria-live="polite">
+    <div class="gate__inner">
+      <div class="tomato tomato--small" aria-hidden="true">
+        <span class="tomato__halftone benday"></span>
+        <span class="tomato__floor"></span>
+        <div class="tomato__art" data-slot="tomato-art"><span>🍅</span></div>
+      </div>
+      <p class="gate__message-text">you're off the list. take care of yourself.</p>
+    </div>
+  </section>
+
+  <!-- ============ 2. LETTER ============ -->
+  <main id="view-letter" class="letter" data-view-panel="letter">
+    <header class="nameplate">
+      <div class="nameplate__meta nameplate__meta--top"><span>cambridge, ma</span><span>mondays · october – december</span><span>by invitation</span></div>
+      <h1 class="nameplate__title">evening</h1>
+      <div class="nameplate__meta nameplate__meta--bottom"><span>a dinner series</span><span>chefs, bartenders &amp; artists of color</span><span>10 – 20 at the table</span></div>
+    </header>
+
+    <header class="feature-head">
+      <p class="kicker">a letter, before dinner</p>
+      <h2 class="headline">at the table again</h2>
+      <p class="dek">on tanám, on repair, and on a season of monday nights.</p>
+      <div class="byline"><span>by ellie</span><span>cambridge, mass.</span></div>
+    </header>
+
+    <article class="letter__body" id="letter-body">
+      <p class="salutation">hello, <span data-bind="guest.first">friend</span> 👋🏽</p>
+      <p>this is an invitation to a table. from october through december, a loose collective of chefs, bartenders and artists of color is cooking on monday nights, somewhere in cambridge, for ten to twenty people at a time. the dates are below. mark the ones you want.</p>
+
+      <section id="letter-section-1" data-section="1">
+        <h3 class="section-head"><span class="section-head__num">i.</span><span class="section-head__title">before</span></h3>
+        <p>until recently, i only spoke of tanám in the past tense. first there was pamangan, a pop up that ran for five years. then tanám, the food/art/social project it became. <strong>tanám is my core, my heart.</strong></p>
+        <p>it held some of the most joy i've ever felt, and some of the hardest stretches of my life. in late 2022, two of our most important people left together, and the rest of us decided to close. i miss it. i'm relieved i'm not running it. both are true.</p>
+        <p>this year, building <strong>coop social club</strong> and gathering the artists of <strong>red sun studios</strong>, i kept reaching for what we learned at tanám. then, on a warm night in august, it came back.</p>
+        <figure class="pull" id="pull-1" data-pull="1">
+          <blockquote>y'all, i think i'm in love again.</blockquote>
+        </figure>
+        <p>three years on, i'm ready to tend to what was left. the wound and the repair are bound up in each other, and neither happens alone. they happen with people in the room, over food.</p>
+        <figure class="pull" id="pull-2" data-pull="2">
+          <blockquote>the wound and the repair are bound up in each other.</blockquote>
+        </figure>
+      </section>
+
+      <section id="letter-section-2" data-section="2">
+        <h3 class="section-head"><span class="section-head__num">ii.</span><span class="section-head__title">the table</span></h3>
+        <p><strong>evening is a monday night dinner series</strong>, made by people who are in it for the love of the game. each night is led by someone for whom that food or story means something. think dinner party.</p>
+        <p>no two nights run the same. a meal might be coursed or passed around the table. it might start at six or at midnight, end on time or end in a dance party. sometimes we'll see the sunrise.</p>
+        <p>this is not a restaurant or a bar. the people cooking and pouring sit down with you, and each night is still being worked out, with you in the room. the point is to be uncensored, to treat it as r&amp;d, and to have a lot of fucking fun.</p>
+        <figure class="pull" id="pull-3" data-pull="3">
+          <figcaption class="pull__label">from our notes</figcaption>
+          <blockquote>stories we can't tell, or experiences we can't have out there.</blockquote>
+        </figure>
+      </section>
+
+      <p class="reread" id="reread"><a class="linkish" id="reread-link" href="#view-letter" data-action="reread">read the letter again ↑</a></p>
+
+      <section id="letter-section-3" data-section="3">
+        <h3 class="section-head" id="mondays"><span class="section-head__num">iii.</span><span class="section-head__title">the mondays</span></h3>
+        <ol class="nights" id="nights" data-list="sessions" aria-label="the mondays"></ol>
+        <p>the calendar is alive, so nights may shift or change.</p>
+        <p>to get a seat, mark every night you'd want. hosts choose their first guests. seats still open a week out go to everyone else who said yes, first come, first served. if you're in, you'll get an email with the time and the address.</p>
+        <figure class="panel" id="house-rules">
+          <figcaption class="panel__caption">house rules</figcaption>
+          <ul class="rules">
+            <li>joy and rage are equally welcome.</li>
+            <li>a no show loses future invites.</li>
+            <li>nothing goes on social.</li>
+            <li>your invite is yours. ask me about lovers, friends and family.</li>
+          </ul>
+        </figure>
+      </section>
+
+      <section id="letter-section-4" data-section="4">
+        <h3 class="section-head"><span class="section-head__num">iv.</span><span class="section-head__title">paying for it</span></h3>
+        <p>there's no ticket. every monday on the list shows three numbers, and you choose.</p>
+        <ol class="tiers" id="tiers">
+          <li><span class="tiers__mark benday" style="--dot-r:.9px" aria-hidden="true"></span><span>the first covers your plate: food, drink, supplies.</span></li>
+          <li><span class="tiers__mark benday" style="--dot-r:1.6px" aria-hidden="true"></span><span>the second adds half of what the crew's time is worth.</span></li>
+          <li><span class="tiers__mark benday" style="--dot-r:2.6px" aria-hidden="true"></span><span>the third pays everyone who cooked, poured and made the room a fair wage for the night.</span></li>
+        </ol>
+
+        <figure class="tier-fig" id="tier-figure" data-block="tier-figure">
+          <div class="tier-fig__chart" role="img" aria-label="a bar with three marks: $50 covers your plate, $110 half the crew's time, $170 everyone paid">
+            <div class="tier-fig__track" aria-hidden="true">
+              <span class="tier-fig__seg tier-fig__seg--1" style="left:0;width:29.4%"></span>
+              <span class="tier-fig__seg tier-fig__seg--2" style="left:29.4%;width:35.3%"></span>
+              <span class="tier-fig__seg tier-fig__seg--3" style="left:64.7%;right:0"></span>
+            </div>
+            <span class="tier-fig__mark" style="--at:29.4%" aria-hidden="true"><span class="tier-fig__amt">$50</span><span class="tier-fig__label">covers your plate</span></span>
+            <span class="tier-fig__mark" style="--at:64.7%" aria-hidden="true"><span class="tier-fig__amt">$110</span><span class="tier-fig__label">half the crew's time</span></span>
+            <span class="tier-fig__mark tier-fig__mark--end" style="--at:100%" aria-hidden="true"><span class="tier-fig__amt">$170</span><span class="tier-fig__label">everyone paid</span></span>
+          </div>
+          <ul class="tier-fig__legend" aria-hidden="true">
+            <li><b>$50</b> · covers your plate</li>
+            <li><b>$110</b> · half the crew's time</li>
+            <li><b>$170</b> · everyone paid</li>
+          </ul>
+          <figcaption>a night of fifteen · $50 · $110 · $170</figcaption>
+        </figure>
+
+        <p>smaller nights cost more per person, so the numbers move. give from where you are. no one is turned away over money, and trades count: a kitchen, a space, something you grew, your hands.</p>
+        <p>once a host offers you a seat, a <span data-bind="deposit-amount">$25</span> deposit holds it and counts toward what you give. if the night falls through, the deposit rolls forward, comes back to you, or stays with us. your call.</p>
+        <p>can't make it but want this to keep going? give anyway. it pays the cooks and the documentation: photos, video, the zine.</p>
+
+        <div class="contribute" id="contribution" data-block="contribution">
+          <div class="contribute__text">
+            <a id="venmo-link" class="btn btn--tomato" data-action="venmo" href="https://venmo.com/u/archipelaga" target="_blank" rel="noopener">venmo @archipelaga</a>
+            <p class="contribute__note">put your name and the date in the note.</p>
+          </div>
+          <figure class="contribute__qr" id="venmo-qr">
+            <!-- swap for <img src="assets/venmo-qr.png" alt="venmo qr code for @archipelaga"> -->
+            <div class="qr-slot" data-slot="venmo-qr">venmo qr<br>@archipelaga</div>
+            <figcaption>or scan</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <div class="signoff" id="signoff">
+        <p>see you at the table,</p>
+        <p class="signoff__name">ellie</p>
+        <div class="signers" id="signers" hidden>
+          <p class="signers__label" id="signers-label">with</p>
+          <ul class="signers__list" id="signers-list" aria-labelledby="signers-label"></ul>
+        </div>
+      </div>
+
+      <p class="ps">p.s. i made a <a href="https://open.spotify.com/playlist/1fZn7te57FWN0wMJvdTYmU" target="_blank" rel="noopener">playlist</a> for all this. the last song is the one i think of as tanám's funeral song.</p>
+      <p class="ps">p.p.s. allergies, or anything the kitchen should know: tap the tomato.</p>
+    </article>
+
+    <footer class="colophon">
+      <div class="colophon__band" aria-hidden="true"></div>
+      <p>evening · cambridge, ma · mondays, october – december</p>
+    </footer>
+  </main>
+
+  <!-- floating tomato (letter view only) -->
+  <button id="drawer-toggle" class="seat-toggle" type="button" data-action="open-drawer" aria-controls="guest-drawer" aria-expanded="false">
+    <span class="seat-toggle__label">your info</span>
+    <span class="seat-toggle__disc"><span data-slot="tomato-icon" aria-hidden="true">🍅</span></span>
+  </button>
+
+  <!-- ============ 3. GUEST DRAWER ============ -->
+  <div id="drawer-scrim" class="scrim" data-action="close-drawer" aria-hidden="true"></div>
+  <aside id="guest-drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" data-drawer-panel>
+    <div class="drawer__inner">
+      <header class="drawer__head">
+        <div>
+          <p class="drawer__eyebrow">your info</p>
+          <h2 id="drawer-title" class="drawer__title">hi, <span data-bind="guest.first">friend</span>.</h2>
+        </div>
+        <button id="drawer-close" class="drawer__close" type="button" data-action="close-drawer">close ×</button>
+      </header>
+
+      <p id="credit-line" class="credit" data-bind="credit" hidden></p>
+
+      <section class="drawer__section" id="drawer-profile">
+        <form id="profile-form" class="profile-form" data-state="idle" data-saved-msg="saved. the kitchen will see it." novalidate>
+          <div class="field" data-field="name" data-state="default">
+            <label for="profile-name">name</label>
+            <input id="profile-name" name="name" type="text" autocomplete="name" aria-describedby="profile-name-error">
+            <p id="profile-name-error" class="field__error" data-error-for="name"></p>
+          </div>
+          <div class="field" data-field="email" data-state="default">
+            <label for="profile-email">email</label>
+            <input id="profile-email" name="email" type="email" autocomplete="email" aria-describedby="profile-email-error">
+            <p id="profile-email-error" class="field__error" data-error-for="email"></p>
+          </div>
+          <div class="field" data-field="phone" data-state="default">
+            <label for="profile-phone">phone</label>
+            <input id="profile-phone" name="phone" type="tel" autocomplete="tel" aria-describedby="profile-phone-error">
+            <p id="profile-phone-error" class="field__error" data-error-for="phone"></p>
+          </div>
+          <div class="field" data-field="allergies" data-state="default">
+            <label for="profile-allergies">allergies / sensitivities</label>
+            <textarea id="profile-allergies" name="allergies" rows="3" placeholder="anything the kitchen should know"></textarea>
+          </div>
+          <div class="field" data-field="offers" data-state="default">
+            <label for="profile-offers">something to offer <span class="field__opt">optional</span></label>
+            <textarea id="profile-offers" name="offers" rows="2" maxlength="500" placeholder="a kitchen, a space, something you grew, your hands"></textarea>
+          </div>
+          <div class="save-row">
+            <button id="profile-save" class="btn" type="submit" data-role="save" data-action="save-profile">
+              <span data-label="default">save</span><span data-label="saving">saving…</span><span data-label="saved">saved ✓</span>
+            </button>
+            <p id="profile-status" class="save-status" data-role="status" aria-live="polite"></p>
+          </div>
+        </form>
+      </section>
+
+      <div class="drawer__foot">
+        <p class="signout">not you? <button id="sign-out" class="linkish" type="button" data-action="sign-out">sign out</button></p>
+        <button id="drawer-remove" class="linkish linkish--danger" type="button" data-action="remove-me">remove me</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ REMOVE-ME CONFIRM ============ -->
+  <dialog id="confirm-remove" class="confirm" data-state="idle" aria-labelledby="confirm-text">
+    <p id="confirm-text" class="confirm__text">this deletes your info from our list and signs you out. it can't be undone.</p>
+    <div class="confirm__actions">
+      <button id="confirm-yes" class="btn btn--tomato btn--small" type="button" data-action="confirm-remove">
+        <span data-label="default">remove me</span><span data-label="removing">removing…</span>
+      </button>
+      <button id="confirm-no" class="btn btn--ghost btn--small" type="button" data-action="cancel-remove">never mind</button>
+    </div>
+    <p id="confirm-status" class="confirm__status" aria-live="polite"></p>
+  </dialog>
+
+  <template id="tpl-signer">
+    <li class="signer" data-ink="tomato">
+      <span class="signer__stamp" aria-hidden="true"><span class="signer__initial" data-bind="initial"></span></span>
+      <span class="signer__name" data-bind="name"></span>
+    </li>
+  </template>
+
+  <template id="tpl-night">
+    <li class="night" data-session-id="" data-status="none" data-state="idle">
+      <div class="night__date" aria-hidden="true">
+        <span class="night__month" data-bind="month"></span>
+        <span class="night__day" data-bind="day"></span>
+        <span class="night__dow" data-bind="dow"></span>
+      </div>
+      <div class="night__body">
+        <div class="night__top">
+          <p class="night__theme" data-bind="theme"></p>
+          <span class="badge" data-bind="status" data-status="none"></span>
+        </div>
+        <p class="night__meta" data-bind="meta"></p>
+        <p class="night__amounts" data-bind="amounts"></p>
+        <div class="rsvp-opts" role="group" data-bind="group-label">
+          <button type="button" data-action="rsvp" data-rsvp="yes" aria-pressed="false">yes</button>
+          <button type="button" data-action="rsvp" data-rsvp="maybe" aria-pressed="false">maybe</button>
+          <button type="button" data-action="rsvp" data-rsvp="no" aria-pressed="false">no</button>
+        </div>
+        <div class="night__offer" data-part="offer">
+          <p data-bind="deposit"></p>
+          <a class="btn btn--tomato btn--small" data-action="venmo-deposit" href="https://venmo.com/u/archipelaga" target="_blank" rel="noopener">venmo @archipelaga</a>
+        </div>
+        <p class="night__confirmed" data-part="confirmed">✓ <span data-bind="where">you'll get an email with the address</span></p>
+        <details class="night__note" data-part="note">
+          <summary data-bind="note-label">add a note</summary>
+          <div class="night__note-body">
+            <label class="visually-hidden" data-bind="note-a11y">note for this night</label>
+            <input type="text" maxlength="300" data-bind="note" placeholder="bringing someone? anything the host should know">
+            <button type="button" class="btn btn--ghost btn--small" data-action="save-note">save</button>
+          </div>
+        </details>
+        <p class="night__status" data-part="save-status" aria-live="polite"></p>
+      </div>
+    </li>
+  </template>
+
+
+</div>
+  <script src="app.js"></script>
+</body>
+</html>

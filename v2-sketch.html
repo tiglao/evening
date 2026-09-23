@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>evening — v2 sketch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300..800;1,6..72,300..800&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root { --desk-band: 42svh; --print-white: #FBF8F1; }
+    .v2-banner { position: sticky; top: 0; z-index: 30; display: flex; justify-content: space-between; gap: var(--s-4); flex-wrap: wrap; padding: 8px var(--s-5); background: var(--ink); color: var(--paper); font: 500 11.5px/1.4 var(--font-mono); letter-spacing: .04em; }
+    .v2-banner a { color: var(--hi); }
+    .v2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
+    .v2-story { padding: var(--s-8) clamp(24px, 5vw, 72px) 30vh; }
+    .v2-story__plate { margin: 0 0 var(--s-8); padding-bottom: var(--s-4); border-bottom: 4px solid var(--ink); }
+    .v2-story__plate h1 { margin: 0; font-weight: 700; font-size: clamp(64px, 9vw, 120px); line-height: .9; letter-spacing: -.05em; font-variation-settings: "opsz" 72; text-shadow: .028em .018em 0 var(--misreg); }
+    .v2-story__plate p { margin: var(--s-2) 0 0; font: 500 12px/1.3 var(--font-mono); letter-spacing: .05em; }
+    .v2-chapter { min-height: 78svh; max-width: 30rem; padding: var(--s-6) 0; }
+    .v2-chapter .section-head { justify-items: start; margin-top: 0; }
+    .v2-chapter .section-head::before { right: 40%; -webkit-mask-image: linear-gradient(90deg, #000, transparent); mask-image: linear-gradient(90deg, #000, transparent); }
+    .v2-chapter .section-head__num { padding-left: 0; }
+    .v2-chapter p { margin: 0 0 1em; text-wrap: pretty; }
+    .v2-chapter[data-active="false"] { opacity: .45; transition: opacity .4s ease; }
+    .v2-chapter[data-active="true"] { opacity: 1; transition: opacity .4s ease; }
+    .v2-chapter mark { color: inherit; padding: 0 .18em; background: linear-gradient(100deg, transparent .1em, var(--hi) .28em, var(--hi) calc(100% - .35em), transparent) 0 62% / 100% 74% no-repeat; -webkit-box-decoration-break: clone; box-decoration-break: clone; mix-blend-mode: multiply; }
+
+    .v2-desk { position: sticky; top: 0; height: 100svh; overflow: hidden; background: var(--paper-deep); border-left: 2px solid var(--ink); }
+    .v2-desk::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(circle at 50% 50%, rgba(27,26,23,.14) 1.2px, transparent 1.9px); background-size: 9px 9px; -webkit-mask-image: radial-gradient(ellipse at 50% 50%, transparent 30%, #000 100%); mask-image: radial-gradient(ellipse at 50% 50%, transparent 30%, #000 100%); }
+    .v2-desk__label { position: absolute; left: var(--s-4); bottom: var(--s-4); z-index: 20; font: 500 11px/1.3 var(--font-mono); color: var(--ink-2); }
+
+    .print { position: absolute; transform: translate(-50%, -50%) rotate(var(--r)); padding: 10px 10px 30px; background: var(--print-white); box-shadow: 0 1px 1px rgba(27,26,23,.18), 0 14px 28px -10px rgba(27,26,23,.5); will-change: transform; }
+    .print__img { position: relative; width: 100%; aspect-ratio: var(--ar); display: grid; place-items: center; padding: var(--s-3); background: repeating-linear-gradient(45deg, #DCD2BD 0 6px, #E8DFCC 6px 12px); font: 500 11px/1.35 var(--font-mono); color: var(--ink-2); text-align: center; }
+    .print[data-kind="video"] .print__img::after { content: ""; position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: var(--ink); opacity: .85; }
+    .print[data-kind="video"] .print__img::before { content: ""; position: absolute; z-index: 1; left: 50%; top: 50%; margin: -8px 0 0 -4px; border-left: 14px solid var(--paper); border-top: 8px solid transparent; border-bottom: 8px solid transparent; }
+    .print__cap { position: absolute; left: 12px; right: 12px; bottom: 8px; margin: 0; font: italic 400 13px/1.2 var(--font-serif); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    @media (max-width: 760px) {
+      .v2 { display: block; }
+      .v2-desk { top: 33px; height: var(--desk-band); z-index: 10; border-left: 0; border-bottom: 2px solid var(--ink); }
+      .print { padding: 6px 6px 18px; }
+      .print__cap { font-size: 10px; bottom: 4px; left: 7px; right: 7px; }
+      .print__img { font-size: 9px; padding: 6px; }
+      .v2-story { padding-top: var(--s-6); }
+      .v2-chapter { min-height: 62svh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="v2-banner"><span>v2 sketch · scrollytelling · not linked from the live site</span><a href="index.html">← back to v1</a></div>
+  <div class="v2" data-view="v2">
+    <article class="v2-story" id="v2-story">
+      <header class="v2-story__plate">
+        <h1>evening</h1>
+        <p>cambridge, ma · mondays, october – december</p>
+      </header>
+
+      <section class="v2-chapter" data-chapter="0" data-active="false">
+        <h2 class="section-head"><span class="section-head__num">i.</span><span class="section-head__title">before</span></h2>
+        <p>until recently, i only spoke of tanám in the past tense. first there was pamangan, a pop up that ran for five years. then tanám, the food/art/social project it became. <strong>tanám is my core, my heart.</strong></p>
+      </section>
+      <section class="v2-chapter" data-chapter="1" data-active="false">
+        <h2 class="section-head"><span class="section-head__num">ii.</span><span class="section-head__title">in love again</span></h2>
+        <p>three years on, i'm ready to tend to what was left. the wound and the repair are bound up in each other, and neither happens alone. they happen with people in the room, over food.</p>
+      </section>
+      <section class="v2-chapter" data-chapter="2" data-active="false">
+        <h2 class="section-head"><span class="section-head__num">iii.</span><span class="section-head__title">the table</span></h2>
+        <p><strong>evening is a monday night dinner series</strong>, made by people who are in it for the love of the game. each night is led by someone for whom that food or story means something. think dinner party.</p>
+      </section>
+      <section class="v2-chapter" data-chapter="3" data-active="false">
+        <h2 class="section-head"><span class="section-head__num">iv.</span><span class="section-head__title">house rules</span></h2>
+        <p><strong>joy and rage are equally welcome.</strong></p>
+      </section>
+      <section class="v2-chapter" data-chapter="4" data-active="false">
+        <h2 class="section-head"><span class="section-head__num">v.</span><span class="section-head__title">the mondays</span></h2>
+        <p>the calendar is alive, so nights may shift or change. see you at the table,</p>
+      </section>
+    </article>
+
+    <div class="v2-desk" id="v2-desk" aria-hidden="true">
+      <p class="v2-desk__label">the desk · prints pile up as you read</p>
+    </div>
+  </div>
+
+  <script>
+    // placeholder media per chapter; x/y = % of desk, w = % of desk width, ar = aspect ratio
+    const PRINTS = [
+      [ { kind: "photo", label: "photo\ntanám, the old pass", cap: "tanám, before", x: 34, y: 36, w: 42, ar: "4/3" },
+        { kind: "photo", label: "photo\nthe cold pot", cap: "the pot", x: 64, y: 58, w: 34, ar: "3/4" } ],
+      [ { kind: "video", label: "video · 0:12\nhands, washing", cap: "clip: hands", x: 44, y: 62, w: 44, ar: "16/10" },
+        { kind: "photo", label: "photo\ncoop social club", cap: "coop social club", x: 70, y: 30, w: 30, ar: "1/1" } ],
+      [ { kind: "photo", label: "photo\nlong table, set", cap: "the table", x: 38, y: 42, w: 50, ar: "3/2" },
+        { kind: "photo", label: "photo\nred sun studios", cap: "red sun studios", x: 26, y: 70, w: 30, ar: "4/5" } ],
+      [ { kind: "video", label: "video · 0:08\ntoast, loud", cap: "clip: a toast", x: 62, y: 46, w: 46, ar: "16/10" } ],
+      [ { kind: "photo", label: "photo\nzine cover, linocut", cap: "the zine", x: 50, y: 52, w: 40, ar: "3/4" } ]
+    ];
+    const desk = document.getElementById("v2-desk");
+    const chapters = [...document.querySelectorAll(".v2-chapter")];
+    const placed = new Map(); // chapter -> elements
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let z = 1;
+
+    function makePrint(p) {
+      const el = document.createElement("div");
+      el.className = "print";
+      el.dataset.kind = p.kind;
+      const r = (Math.random() * 16 - 8).toFixed(1);
+      el.style.cssText = `left:${p.x}%;top:${p.y}%;width:${p.w}%;--r:${r}deg;--ar:${p.ar};z-index:${z++}`;
+      el.innerHTML = `<div class="print__img">${p.label.replace("\n", "<br>")}</div><p class="print__cap">${p.cap}</p>`;
+      desk.append(el);
+      if (!reduce) {
+        const dx = (Math.random() * 120 - 60).toFixed(0);
+        el.animate([
+          { transform: `translate(-50%,-50%) translate(${dx}px, 60vh) rotate(${r * 4}deg) scale(1.12)`, opacity: 0 },
+          { transform: `translate(-50%,-50%) rotate(${r}deg) scale(1.03)`, opacity: 1, offset: .8 },
+          { transform: `translate(-50%,-50%) rotate(${r}deg)`, opacity: 1 }
+        ], { duration: 720, easing: "cubic-bezier(.2,.8,.2,1)" });
+      }
+      return el;
+    }
+    function setActive(i) {
+      chapters.forEach((c, n) => (c.dataset.active = String(n === i)));
+      PRINTS.forEach((set, n) => {
+        if (n <= i && !placed.has(n)) placed.set(n, set.map((p, k) => { const el = makePrint(p); if (k) el.style.animationDelay = "0s"; return el; }));
+        if (n > i && placed.has(n)) {
+          placed.get(n).forEach((el) => {
+            const a = reduce ? null : el.animate([{ opacity: 1 }, { opacity: 0, transform: el.style.transform + " translateY(40px)" }], { duration: 250 });
+            a ? (a.onfinish = () => el.remove()) : el.remove();
+          });
+          placed.delete(n);
+        }
+      });
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) setActive(Number(e.target.dataset.chapter)); });
+    }, { rootMargin: "-45% 0px -45% 0px" });
+    chapters.forEach((c) => io.observe(c));
+    setActive(0);
+  </script>
+</body>
+</html>
