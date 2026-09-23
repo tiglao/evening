@@ -41,7 +41,19 @@ const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").match
 
 /* ---------- api (apps script web app) ----------
    POST with a text/plain body so the browser skips the CORS preflight apps script can't answer. */
+// every action is safe to repeat, so a failed or busy request is tried once more before the site shows an error
 async function call(action, payload = {}) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const res = await callOnce(action, payload);
+      if (res && res.status === "busy" && attempt < 3) { await new Promise((r) => setTimeout(r, 1500)); continue; }
+      return res;
+    } catch (err) {
+      if (attempt >= 2) throw err;
+    }
+  }
+}
+async function callOnce(action, payload) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), CONFIG.timeoutMs);
   try {
