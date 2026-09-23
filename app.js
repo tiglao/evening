@@ -27,7 +27,7 @@ const CONFIG = {
   goodbyeMs: 2600,
   deposit: 25,                    // replaced by the sheet's Settings > DEPOSIT once signed in
   venmoUrl: "https://venmo.com/u/archipelaga",
-  timeoutMs: 20000
+  timeoutMs: 60000                // apps script can take 20 to 40 seconds when it's been idle
 };
 
 /* ---------- helpers ---------- */
@@ -383,6 +383,14 @@ function setFormState(form, state, msg = "") {
   $('[data-role="status"]', form).textContent = msg;
   $('[data-role="save"]', form).disabled = state === "saving";
 }
+async function confirmSaved(sent) {
+  const s = await api.session(app.token).catch(() => null);
+  if (!s || s.status !== "ok") return { status: "error" };
+  const g = s.guest || {};
+  const same = (a, b) => String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
+  const ok = Object.keys(sent).every((k) => (k === "phone" ? digits(g[k]) === digits(sent[k]) : same(g[k], sent[k])));
+  return ok ? { status: "ok", guest: g } : { status: "error" };
+}
 const SAVE_ERROR = "that didn't save. give it another try in a moment.";
 function wireProfileForm(form, names) {
   let timer;
@@ -397,7 +405,10 @@ function wireProfileForm(form, names) {
     const bad = validate(form, ["name", "email", "phone"]);
     if (bad) { setFormState(form, "invalid", "check the marked fields."); bad.focus(); return; }
     setFormState(form, "saving");
-    let res; try { res = await api.saveProfile(app.token, readFields(form, names)); } catch { res = { status: "error" }; }
+    const sent = readFields(form, names);
+    let res; try { res = await api.saveProfile(app.token, sent); } catch { res = { status: "error" }; }
+    // a slow response can fail here even though the sheet saved it, so check before showing an error
+    if (res.status !== "ok") res = await confirmSaved(sent);
     if (res.status === "ok") {
       app.guest = { ...app.guest, ...res.guest };
       bindGuest();
@@ -450,6 +461,11 @@ $("#confirm-no").addEventListener("click", () => confirmDlg.close());
 $("#confirm-yes").addEventListener("click", async () => {
   setConfirmState("removing");
   let res; try { res = await api.removeMe(app.token); } catch { res = { status: "error" }; }
+  // same check: if the sheet no longer knows this token, the removal went through
+  if (res.status !== "ok") {
+    const s = await api.session(app.token).catch(() => null);
+    if (s && s.status === "invalid") res = { status: "ok" };
+  }
   if (res.status === "ok") {
     confirmDlg.close();
     clearSession();
