@@ -15,7 +15,8 @@
     #view-gate[data-state]      boot | default | error | loading | failed
     .field[data-state]          default | error
     .profile-form[data-state]   idle | dirty | invalid | saving | saved | error   (#profile-form, #nl-form)
-    .night[data-status]         none | asked | offered | confirmed | waitlisted | cancelled
+    .night[data-status]         none | maybe | yes | confirmed | full | cancelled
+                                (yes = said yes, not confirmed yet; confirmed = yes + a VENMO amount on the sheet)
     .night[data-state]          idle | saving | saved | error
     #confirm-remove[data-state] idle | removing | error
 */
@@ -25,7 +26,6 @@ const CONFIG = {
   tokenKey: "evening.token",
   readKey: "evening.read",
   goodbyeMs: 2600,
-  deposit: 25,                    // replaced by the sheet's Settings > DEPOSIT once signed in
   venmoUrl: "https://venmo.com/u/archipelaga",
   timeoutMs: 60000                // apps script can take 20 to 40 seconds when it's been idle
 };
@@ -202,9 +202,6 @@ function setGateState(state) {
 function bindGuest() {
   const g = app.guest || {};
   $$('[data-bind="guest.first"]').forEach((el) => (el.textContent = firstName(g.name)));
-  const credit = $("#credit-line");
-  credit.hidden = !(g.credit > 0);
-  credit.textContent = g.credit > 0 ? `${money(g.credit)} credit toward your next night` : "";
 }
 const INKS = ["tomato", "leaf", "hi", "ink"];
 const inkFor = (name) => INKS[[...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) % INKS.length];
@@ -259,11 +256,7 @@ async function loadSessions() {
   let r;
   try { r = await api.listSessions(app.token); } catch { r = { status: "offline" }; }
   if (r.status === "invalid") return false;
-  if (r.status === "ok") {
-    if (r.deposit) K.deposit = r.deposit;
-    if (r.example) renderExample(r.example);
-    $$('[data-bind="deposit-amount"]').forEach((el) => (el.textContent = money(K.deposit)));
-  }
+  if (r.status === "ok" && r.example) renderExample(r.example);
   app.sessions = (r.sessions || []).map((s) => ({ ...s, menu: MENUS[menuKey(s)] || null }));
   app.signers = r.signers || [];
   renderNights(r.status !== "ok");
@@ -333,13 +326,15 @@ gateForm.addEventListener("input", (e) => {
 
 /* ---------- nights (inline rsvp in iii.) ---------- */
 const STATUS_LABEL = {
-  none: "not asked yet",
-  asked: "asked · hosts choosing",
-  offered: "seat offered",
+  none: "not answered",
+  maybe: "maybe",
+  yes: "yes · pay to hold",
   confirmed: "seat confirmed",
-  waitlisted: "waitlisted",
+  full: "full",
   cancelled: "night cancelled"
 };
+// seats left, from the sheet's SEATS minus confirmed guests
+const spotsText = (s) => (s.spotsLeft == null || s.status === "cancelled" ? "" : s.spotsLeft > 0 ? ` · ${s.spotsLeft} of ${s.seats} seats left` : " · full");
 function renderNights(failed) {
   const list = $("#nights");
   list.innerHTML = "";
@@ -369,13 +364,14 @@ function renderNights(failed) {
     $('[data-bind="day"]', row).textContent = s.day;
     $('[data-bind="dow"]', row).textContent = s.dow;
     $('[data-bind="theme"]', row).textContent = s.theme;
-    $('[data-bind="meta"]', row).textContent = `${when} · ${s.time || "time tba"} · host · ${s.host}`;
+    $('[data-bind="meta"]', row).textContent = `${when} · ${s.time || "time tba"} · host · ${s.host}${spotsText(s)}`;
     const amt = $('[data-bind="amounts"]', row);
     amt.textContent = `${money(a.plate)} · ${money(a.half)} · ${money(a.full)}`;
     amt.setAttribute("aria-label", `${money(a.plate)} covers your plate, ${money(a.half)} half the crew's time, ${money(a.full)} everyone paid`);
     $('[data-bind="group-label"]', row).setAttribute("aria-label", `rsvp for ${when}, ${s.theme}`);
-    $('[data-bind="deposit"]', row).textContent = `a ${money(K.deposit)} deposit holds your seat`;
-    $('[data-action="venmo-deposit"]', row).href = K.venmoUrl;
+    $('[data-bind="pay"]', row).textContent =
+      `to hold your seat, venmo what you can (${money(a.plate)} to ${money(a.full)}, any amount is fine) with "${s.month} ${s.day} ${firstName(app.guest && app.guest.name)}" in the note.`;
+    $('[data-action="venmo-pay"]', row).href = K.venmoUrl;
     const note = (app.guest && app.guest.notes && app.guest.notes[s.id]) || "";
     const noteInput = $('[data-bind="note"]', row);
     noteInput.value = note;
@@ -441,9 +437,9 @@ document.addEventListener("click", async (e) => {
   if (res.status === "ok") {
     app.guest.rsvps[id] = value;
     const s = app.sessions.find((x) => x.id === id);
-    // a yes/maybe puts you in the ask; hosts move you to offered/confirmed
-    if (s && (s.status === "none" || s.status === "asked")) {
-      s.status = value === "no" ? "none" : "asked";
+    // a confirmed seat only changes when the sheet's VENMO changes; everything else follows the answer
+    if (s && s.status !== "confirmed" && s.status !== "cancelled" && s.status !== "full") {
+      s.status = value === "yes" ? "yes" : value === "maybe" ? "maybe" : "none";
       const row = $(`.night[data-session-id="${id}"]`);
       if (row) setNightStatus(row, s.status);
     }

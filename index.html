@@ -195,9 +195,10 @@
           <figcaption>a night of fifteen · $50 · $110 · $170</figcaption>
         </figure>
 
-        <p>smaller nights cost more per person, so the numbers move. give from where you are. no one is turned away over money, and exchanges are possible (think commrcial kitchen space, storage, something you grew. tell me what you else you've got to offer).</p>
-        <p>once a host offers you a seat, a <span data-bind="deposit-amount">$25</span> deposit holds it and counts toward what you give. if the night falls through, the deposit rolls forward, comes back to you, or stays with us. your call.</p>
-        <p>can't make it but want this to keep going? give anyway. it pays the cooks and the documentation: photos, video, the zine.</p>
+        <p>smaller nights cost more per person, so the numbers move. give from where you are. no one is turned away over money, and exchanges are possible (think commercial kitchen space, storage, something you grew. tell me what else you've got to offer).</p>
+        <p>say yes to a night, then venmo what you can with the date and your name in the note. any amount, zero included, confirms your seat; if zero is where you are, reply to your reminder email and say so. a week before each dinner, seats that aren't confirmed open up to everyone, first come first serve.</p>
+        <p>what you give covers the night's costs first, and anything beyond that goes to the team for the evening.</p>
+        <p>can't make it but want this to keep going? give anyway. it covers the costs of the nights first, then goes to the team: cooks, bartenders, and the people documenting it.</p>
 
         <div class="contribute" id="contribution" data-block="contribution">
           <div class="contribute__text">
@@ -247,8 +248,6 @@
         </div>
         <button id="drawer-close" class="drawer__close" type="button" data-action="close-drawer">close ×</button>
       </header>
-
-      <p id="credit-line" class="credit" data-bind="credit" hidden></p>
 
       <section class="drawer__section" id="drawer-profile">
         <form id="profile-form" class="profile-form" data-state="idle" data-saved-msg="saved. the kitchen will see it." novalidate>
@@ -364,9 +363,9 @@
           <button type="button" data-action="rsvp" data-rsvp="maybe" aria-pressed="false">maybe</button>
           <button type="button" data-action="rsvp" data-rsvp="no" aria-pressed="false">no</button>
         </div>
-        <div class="night__offer" data-part="offer">
-          <p data-bind="deposit"></p>
-          <a class="btn btn--tomato btn--small" data-action="venmo-deposit" href="https://venmo.com/u/archipelaga" target="_blank" rel="noopener">venmo @archipelaga</a>
+        <div class="night__pay" data-part="pay">
+          <p data-bind="pay"></p>
+          <a class="btn btn--tomato btn--small" data-action="venmo-pay" href="https://venmo.com/u/archipelaga" target="_blank" rel="noopener">venmo @archipelaga</a>
         </div>
         <p class="night__confirmed" data-part="confirmed">✓ <span data-bind="where">you'll get an email with the address</span></p>
         <details class="night__note" data-part="note">

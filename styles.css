@@ -279,11 +279,15 @@ body[data-entry="returning"] .reread { display: block; }
 .night__theme { flex: 1 1 13em; margin: 0; font: italic 400 21px/1.22 var(--font-serif); text-wrap: balance; }
 .night__meta { margin: 0; font: 400 12px/1.45 var(--font-mono); color: var(--ink-2); text-transform: lowercase; }
 .night__amounts { margin: 0; font: 500 12.5px/1.4 var(--font-mono); letter-spacing: .02em; }
-.night__offer { display: none; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-3) var(--s-4); border: 1.5px solid var(--ink); background: var(--hi-wash); }
-.night__offer p { margin: 0; font: 500 16px/1.3 var(--font-serif); }
+.night__pay { display: none; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-3) var(--s-4); border: 1.5px solid var(--ink); background: var(--hi-wash); }
+.night__pay p { margin: 0; font: 500 16px/1.3 var(--font-serif); }
 .night__confirmed { display: none; margin: 0; font: 500 var(--text-small)/1.4 var(--font-mono); color: var(--leaf); }
 .night__status { margin: 0; min-height: 15px; font: 500 11px/1.3 var(--font-mono); color: var(--ink-2); }
-.night[data-status="offered"] .night__offer { display: flex; }
+.night[data-status="yes"] .night__pay { display: flex; }
+/* a full night: no new yeses (maybe still works), unless you already have a seat */
+.night[data-status="full"] [data-rsvp="yes"] { display: none; }
+.night[data-status="full"] .rsvp-opts { grid-template-columns: repeat(2, 1fr); }
+.night[data-status="full"] .rsvp-opts button[data-rsvp="maybe"] { border-left: 0; }
 .night[data-status="confirmed"] .night__confirmed { display: block; }
 .night[data-status="cancelled"] .rsvp-opts,
 .night[data-status="cancelled"] .night__amounts { display: none; }
@@ -309,13 +313,13 @@ body[data-entry="returning"] .reread { display: block; }
 .badge::before { font-size: 11px; line-height: 1; }
 .badge[data-status="none"] { border-style: dashed; border-color: var(--ink-3); color: var(--ink-2); }
 .badge[data-status="none"]::before { content: "–"; }
-.badge[data-status="asked"]::before { content: "○"; }
-.badge[data-status="offered"] { background: var(--hi); }
-.badge[data-status="offered"]::before { content: "◐"; }
+.badge[data-status="maybe"]::before { content: "○"; }
+.badge[data-status="yes"] { background: var(--hi); }
+.badge[data-status="yes"]::before { content: "◐"; }
 .badge[data-status="confirmed"] { background: var(--leaf); border-color: var(--leaf); color: var(--paper); box-shadow: 2px 2px 0 var(--ink); transform: rotate(-2deg); }
 .badge[data-status="confirmed"]::before { content: "●"; }
-.badge[data-status="waitlisted"] { border-color: var(--tomato-ink); color: var(--tomato-ink); }
-.badge[data-status="waitlisted"]::before { content: "…"; }
+.badge[data-status="full"] { border-color: var(--tomato-ink); color: var(--tomato-ink); }
+.badge[data-status="full"]::before { content: "×"; }
 .badge[data-status="cancelled"] { background: var(--ink); color: var(--paper); }
 .badge[data-status="cancelled"]::before { content: "×"; }
 
