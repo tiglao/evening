@@ -303,6 +303,39 @@
     <p id="confirm-status" class="confirm__status" aria-live="polite"></p>
   </dialog>
 
+  <!-- ============ MENU CARD ============ -->
+  <dialog id="menu-card" class="menu" aria-labelledby="menu-title" data-session-id="">
+    <header class="menu__head">
+      <p class="menu__meta" id="menu-meta" data-bind="meta"></p>
+      <button id="menu-close" class="drawer__close" type="button" data-action="close-menu">close ×</button>
+    </header>
+    <div class="menu__scroll" id="menu-scroll">
+      <div class="menu__top">
+        <p class="kicker">a possible menu</p>
+        <h2 id="menu-title" class="menu__title" data-bind="theme"></h2>
+        <p id="menu-dek" class="menu__dek" data-bind="dek"></p>
+      </div>
+      <div id="menu-intro" class="menu__intro" data-bind="intro"></div>
+      <p class="menu__label"><span>planned explorations</span></p>
+      <ol id="menu-items" class="menu__items" data-list="menu-items"></ol>
+    </div>
+    <footer id="menu-foot" class="menu__foot" data-session-id="" data-state="idle" data-rsvp-unit>
+      <div class="menu__answer" id="menu-answer">
+        <p class="menu__ask">can you make it?</p>
+        <div class="rsvp-opts" role="group" aria-label="rsvp for this night">
+          <button type="button" data-action="rsvp" data-rsvp="yes" aria-pressed="false">yes</button>
+          <button type="button" data-action="rsvp" data-rsvp="maybe" aria-pressed="false">maybe</button>
+          <button type="button" data-action="rsvp" data-rsvp="no" aria-pressed="false">no</button>
+        </div>
+        <p class="night__status" data-part="save-status" aria-live="polite"></p>
+      </div>
+      <nav class="menu__nav" aria-label="other menus">
+        <button id="menu-prev" class="linkish" type="button" data-action="menu-prev"></button>
+        <button id="menu-next" class="linkish" type="button" data-action="menu-next"></button>
+      </nav>
+    </footer>
+  </dialog>
+
   <template id="tpl-signer">
     <li class="signer" data-ink="tomato">
       <span class="signer__stamp" aria-hidden="true"><span class="signer__initial" data-bind="initial"></span></span>
@@ -311,7 +344,7 @@
   </template>
 
   <template id="tpl-night">
-    <li class="night" data-session-id="" data-status="none" data-state="idle">
+    <li class="night" data-session-id="" data-status="none" data-state="idle" data-menu="no" data-rsvp-unit>
       <div class="night__date" aria-hidden="true">
         <span class="night__month" data-bind="month"></span>
         <span class="night__day" data-bind="day"></span>
@@ -324,6 +357,8 @@
         </div>
         <p class="night__meta" data-bind="meta"></p>
         <p class="night__amounts" data-bind="amounts"></p>
+        <button class="linkish night__menu" type="button" data-action="open-menu">see the menu</button>
+        <p class="night__menu-none">menu still being written</p>
         <div class="rsvp-opts" role="group" data-bind="group-label">
           <button type="button" data-action="rsvp" data-rsvp="yes" aria-pressed="false">yes</button>
           <button type="button" data-action="rsvp" data-rsvp="maybe" aria-pressed="false">maybe</button>

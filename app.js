@@ -30,6 +30,67 @@ const CONFIG = {
   timeoutMs: 60000                // apps script can take 20 to 40 seconds when it's been idle
 };
 
+/* ---------- menus ----------
+   edited here by hand (the sheet doesn't hold menus). keyed by "month day" as the sheet shows it,
+   e.g. "oct 19". a night with no entry shows "menu still being written".
+     {dek, intro: [paragraph, ...], items: [item, ...]}   items render in order
+     item: {name, alt, sub, lines: [..]}   dish  -> "name / alt", italic sub, plain lines
+           {kind:"drink", name, desc}      drink -> "name // desc"
+           {kind:"tbd"}                    a "??" slot */
+const MENUS = {
+  "oct 19": {
+    dek: "",
+    intro: ["the focus here will be of ritual. i’ve been thinking about this one since 2019, and if there’s one i’m really asking you to come to it’s this one."],
+    items: [
+      { name: "pinikpikan", alt: "tinola ampon etag", sub: "a dish, an offering, divination. for when one is looking for guidance regarding a difficult decision.", lines: ["chicken, upo, kamote leaves in a ginger and salted pork broth."] },
+      { name: "tidtad", alt: "dinuguan", sub: "connecting pampanga to the cordilleras", lines: ["blood stew with pork belly, shoulder, ear and serrano chilies. served with traditionally fermented putong puti rice cake."] },
+      { name: "atang", alt: "offering to the dead", lines: ["black rice suman, sticky rice with coconut milk and ginger", "busi-inspired black sesame rice krispie treat"] },
+      { name: "nasi", alt: "steamed white rice" },
+      { kind: "drink", name: "basi", desc: "tamarind, salted lime, soda" },
+      { kind: "drink", name: "riesling", desc: "mosel, germany" }
+    ]
+  },
+  "oct 26": {
+    dek: "filipino cosmology and our spiritual ancestors",
+    intro: [],
+    items: [
+      { name: "pu-erh tea smoked duck humba", lines: ["sweet, tangy, savory with star anise. saba banana, tausi (fermented black beans), ginger rice porridge"] },
+      { name: "laing atin langka", lines: ["young jackfruit and taro leaves, simmered in coconut milk and chilis"] },
+      { name: "tiyula itum", lines: ["tausug black soup. beef simmered with burnt coconut, ginger, turmeric, lemongrass and bird’s eye chilies."] },
+      { name: "nasi", alt: "steamed white rice" },
+      { kind: "tbd" },
+      { kind: "tbd" }
+    ]
+  },
+  "nov 2": {
+    dek: "what we inherit, what we bring forth, our place in time",
+    intro: [],
+    items: [
+      { name: "kinilaw", alt: "ceviche", lines: ["salmon, mango, red onion, ginger, sugarcane vinegar"] },
+      { name: "almusal", alt: "morning meal", lines: ["daing bangus (marinated and fried milkfish), ebun buru (salted duck egg), tomato, onion, rice"] },
+      { name: "kare-kare", lines: ["oxtail and brisket, in a toasted rice and peanut sauce with annatto. eggplant, green beans, bokchoy. served with baguk (fermented shrimp paste)"] },
+      { name: "nasi", alt: "steamed white rice" },
+      { name: "pan de muerto", sub: "to take home, by aly lopez" },
+      { kind: "tbd" },
+      { kind: "tbd" }
+    ]
+  },
+  "nov 9": {
+    dek: "love songs",
+    intro: [],
+    items: [
+      { name: "tortang talong", alt: "charred eggplant omelette", lines: ["battered and deep-fried. served with dressed tomato salad."] },
+      { name: "pancit dagat", alt: "seafood noodles", lines: ["egg noodles with shrimp, bay scallops, snow peas and green onion in a soy calamansi butter sauce."] },
+      { name: "relleno", alt: "stuffed fish", lines: ["ballotine of sea bass, carrot, celery, onion, fish sauce, lemon"] },
+      { name: "nasi", alt: "steamed white rice" },
+      { name: "buko pie", sub: "a laguna answer to apple pie", lines: ["young coconut, condensed milk, baked in a flaky crust"] },
+      { kind: "tbd" },
+      { kind: "tbd" }
+    ]
+  }
+};
+const menuKey = (s) => `${String(s.month || "").toLowerCase()} ${Number(s.day) || s.day}`;
+
 /* ---------- helpers ---------- */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -203,7 +264,7 @@ async function loadSessions() {
     if (r.example) renderExample(r.example);
     $$('[data-bind="deposit-amount"]').forEach((el) => (el.textContent = money(K.deposit)));
   }
-  app.sessions = r.sessions || [];
+  app.sessions = (r.sessions || []).map((s) => ({ ...s, menu: MENUS[menuKey(s)] || null }));
   app.signers = r.signers || [];
   renderNights(r.status !== "ok");
   renderSigners();
@@ -289,12 +350,21 @@ function renderNights(failed) {
     list.append(li);
     return;
   }
+  if (!app.sessions.length) {
+    const li = document.createElement("li");
+    li.className = "nights__empty";
+    li.textContent = "no mondays are posted yet. dates go up here as hosts set them, so check back soon.";
+    list.append(li);
+    return;
+  }
   const rsvps = (app.guest && app.guest.rsvps) || {};
   app.sessions.forEach((s) => {
     const row = $("#tpl-night").content.firstElementChild.cloneNode(true);
     const when = `${s.dow} ${s.month} ${s.day}`;
     const a = s.amounts || {};
     row.dataset.sessionId = s.id;
+    row.dataset.menu = s.menu ? "yes" : "no";
+    $('[data-action="open-menu"]', row).setAttribute("aria-label", `see the menu for ${when}, ${s.theme}`);
     $('[data-bind="month"]', row).textContent = s.month;
     $('[data-bind="day"]', row).textContent = s.day;
     $('[data-bind="dow"]', row).textContent = s.dow;
@@ -346,16 +416,27 @@ $("#nights").addEventListener("click", async (e) => {
     }
     return;
   }
-  const btn = e.target.closest("[data-rsvp]");
+  const menuBtn = e.target.closest('[data-action="open-menu"]');
+  if (menuBtn) openMenu(menuBtn.closest(".night").dataset.sessionId);
+});
+// any [data-rsvp-unit] (a night row, the menu card footer) answers for its data-session-id;
+// every unit showing that night updates together.
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-rsvp-unit] [data-rsvp]");
   if (!btn || !app.guest) return;
-  const row = btn.closest(".night");
-  const id = row.dataset.sessionId;
+  const unit = btn.closest("[data-rsvp-unit]");
+  const id = unit.dataset.sessionId;
   const value = btn.dataset.rsvp;
   const prev = app.guest.rsvps[id] || null;
-  if (prev === value && row.dataset.state !== "error") return;
-  const status = $('[data-part="save-status"]', row);
-  setRowChoice(row, value);
-  row.dataset.state = "saving"; status.textContent = "saving…";
+  if (prev === value && unit.dataset.state !== "error") return;
+  const units = () => $$(`[data-rsvp-unit][data-session-id="${id}"]`);
+  const set = (state, msg, choice) => units().forEach((u) => {
+    setRowChoice(u, choice);
+    u.dataset.state = state;
+    const s = $('[data-part="save-status"]', u);
+    if (s) s.textContent = msg;
+  });
+  set("saving", "saving…", value);
   let res; try { res = await api.setRsvp(app.token, id, value); } catch { res = { status: "error" }; }
   if (res.status === "ok") {
     app.guest.rsvps[id] = value;
@@ -363,13 +444,77 @@ $("#nights").addEventListener("click", async (e) => {
     // a yes/maybe puts you in the ask; hosts move you to offered/confirmed
     if (s && (s.status === "none" || s.status === "asked")) {
       s.status = value === "no" ? "none" : "asked";
-      setNightStatus(row, s.status);
+      const row = $(`.night[data-session-id="${id}"]`);
+      if (row) setNightStatus(row, s.status);
     }
-    row.dataset.state = "saved"; status.textContent = "saved.";
+    set("saved", "saved.", value);
   } else {
-    setRowChoice(row, prev);
-    row.dataset.state = "error"; status.textContent = "that didn't save. tap again?";
+    set("error", "that didn't save. tap again?", prev);
   }
+});
+
+/* ---------- menu card ---------- */
+const menuDlg = $("#menu-card");
+const node = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+const menuNights = () => app.sessions.filter((s) => s.menu && s.status !== "cancelled");
+function renderMenuItems(list, items) {
+  list.innerHTML = "";
+  items.forEach((it) => {
+    const kind = it.kind || "dish";
+    const li = node("li", "menu-item");
+    li.dataset.kind = kind;
+    if (kind === "tbd") {
+      li.append(node("span", "menu-item__tbd", "??"));
+      li.firstChild.setAttribute("aria-hidden", "true");
+      li.append(node("span", "visually-hidden", "still being worked out"));
+    } else if (kind === "drink") {
+      const p = node("p", "menu-item__name");
+      p.append(node("span", "menu-item__native", it.name), node("span", "menu-item__sep", " // "), node("span", "menu-item__alt", it.desc || ""));
+      li.append(p);
+    } else {
+      const p = node("p", "menu-item__name");
+      p.append(node("span", "menu-item__native", it.name));
+      if (it.alt) p.append(node("span", "menu-item__alt", ` / ${it.alt}`));
+      li.append(p);
+      if (it.sub) li.append(node("p", "menu-item__sub", it.sub));
+      (it.lines || []).forEach((l) => li.append(node("p", "menu-item__desc", l)));
+    }
+    list.append(li);
+  });
+}
+function openMenu(id) {
+  const s = app.sessions.find((x) => x.id === id);
+  if (!s || !s.menu) return;
+  const m = s.menu;
+  menuDlg.dataset.sessionId = id;
+  $("#menu-meta").textContent = `${s.dow} ${s.month} ${s.day} · ${s.time || "time tba"} · host · ${(s.host || "tba").toLowerCase()}`;
+  $("#menu-title").textContent = s.theme;
+  const dek = $("#menu-dek"); dek.textContent = m.dek || ""; dek.hidden = !m.dek;
+  const intro = $("#menu-intro"); intro.innerHTML = "";
+  (m.intro || []).forEach((p) => intro.append(node("p", null, p)));
+  intro.hidden = !(m.intro && m.intro.length);
+  renderMenuItems($("#menu-items"), m.items || []);
+  const foot = $("#menu-foot");
+  foot.dataset.sessionId = id; foot.dataset.state = "idle";
+  $('[data-part="save-status"]', foot).textContent = "";
+  $(".rsvp-opts", foot).setAttribute("aria-label", `rsvp for ${s.dow} ${s.month} ${s.day}, ${s.theme}`);
+  setRowChoice(foot, (app.guest && app.guest.rsvps[id]) || null);
+  const list = menuNights(); const i = list.findIndex((x) => x.id === id);
+  const prev = list[i - 1], next = list[i + 1];
+  const pb = $("#menu-prev"), nb = $("#menu-next");
+  pb.hidden = !prev; nb.hidden = !next;
+  if (prev) { pb.textContent = `← ${prev.month} ${prev.day}`; pb.dataset.target = prev.id; pb.setAttribute("aria-label", `menu for ${prev.month} ${prev.day}, ${prev.theme}`); }
+  if (next) { nb.textContent = `${next.month} ${next.day} →`; nb.dataset.target = next.id; nb.setAttribute("aria-label", `menu for ${next.month} ${next.day}, ${next.theme}`); }
+  $("#menu-scroll").scrollTop = 0;
+  if (!menuDlg.open) menuDlg.showModal();
+}
+$("#menu-close").addEventListener("click", () => menuDlg.close());
+$("#menu-prev").addEventListener("click", (e) => openMenu(e.currentTarget.dataset.target));
+$("#menu-next").addEventListener("click", (e) => openMenu(e.currentTarget.dataset.target));
+menuDlg.addEventListener("click", (e) => { if (e.target === menuDlg) menuDlg.close(); }); // backdrop click
+menuDlg.addEventListener("close", () => {
+  const b = $(`.night[data-session-id="${menuDlg.dataset.sessionId}"] [data-action="open-menu"]`);
+  if (b && body.dataset.view === "letter") b.focus({ preventScroll: true });
 });
 
 /* ---------- read flag + reread link ---------- */
@@ -453,9 +598,9 @@ function closeDrawer(returnFocus = true) {
 }
 toggle.addEventListener("click", openDrawer);
 $$('[data-action="close-drawer"]').forEach((el) => el.addEventListener("click", () => closeDrawer()));
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !confirmDlg.open) closeDrawer(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !confirmDlg.open && !menuDlg.open) closeDrawer(); });
 
-$("#sign-out").addEventListener("click", () => { clearSession(); app.run++; resetToGate(); });
+$("#sign-out").addEventListener("click", () => { if (menuDlg.open) menuDlg.close(); clearSession(); app.run++; resetToGate(); });
 
 /* ---------- remove me ---------- */
 function setConfirmState(state, msg = "") {
