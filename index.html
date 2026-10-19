@@ -306,7 +306,10 @@
   <dialog id="menu-card" class="menu" aria-labelledby="menu-title" data-session-id="">
     <header class="menu__head">
       <p class="menu__meta" id="menu-meta" data-bind="meta"></p>
-      <button id="menu-close" class="drawer__close" type="button" data-action="close-menu">close ×</button>
+      <div class="menu__head-actions">
+        <button id="menu-copy" class="linkish menu__copy" type="button" data-action="copy-menu-link" data-state="idle" aria-live="polite"><span data-label="idle">copy link</span><span data-label="copied">copied ✓</span></button>
+        <button id="menu-close" class="drawer__close" type="button" data-action="close-menu">close ×</button>
+      </div>
     </header>
     <div class="menu__scroll" id="menu-scroll">
       <div class="menu__top">

@@ -40,7 +40,10 @@ const CONFIG = {
 const MENUS = {
   "oct 19": {
     dek: "",
-    intro: ["the focus here will be of ritual. i’ve been thinking about this one since 2019, and if there’s one i’m really asking you to come to it’s this one."],
+    intro: [
+      "we start at 11 pm, the part of a wake when the visitors have gone home and the ones staying up with the dead pull their chairs in closer. the way death tends to get handled in this country, quietly and kept out of sight, has always felt foreign to me. for filipinos who keep our old traditions, death is something we keep close: we feed our dead, we talk to them, we set food out for them. they’re never really gone. in the old belief, our dead become anito, ancestor spirits who stay close and keep watch over us. our wakes are long, social and full of food. at undas, families spend the night at the cemetery with candles, cards and a feast laid out on the graves, more reunion than mourning. for one night, let’s talk about death out loud, and celebrate the people who’ve passed on the way they deserve: with food, drink and stories.",
+      "the focus here will be of ritual. i’ve been thinking about this one since 2019, and if there’s one i’m really asking you to come to it’s this one."
+    ],
     items: [
       { name: "pinikpikan", alt: "tinola ampon etag", sub: "a dish, an offering, divination. for when one is looking for guidance regarding a difficult decision.", lines: ["chicken, upo, kamote leaves in a ginger and salted pork broth."] },
       { name: "tidtad", alt: "dinuguan", sub: "connecting pampanga to the cordilleras", lines: ["blood stew with pork belly, shoulder, ear and serrano chilies. served with traditionally fermented putong puti rice cake."] },
@@ -52,7 +55,11 @@ const MENUS = {
   },
   "oct 26": {
     dek: "filipino cosmology and our spiritual ancestors",
-    intro: [],
+    intro: [
+      "it was only after my grandmother on my dad's side passed that i started to hear about a depth of knowledge she held quietly. here and there, i would hear stories. like how my dad would wake in the night to her hand on his center, whispering something he couldn’t make out. how she would ferry the sick out onto the river when the fog was thick and the night was dark, and immerse them in the healing waters of our precolonial god.",
+      "people with all kinds of ailments came from across the baryo to see her before they saw a doctor. it’s been almost ten years since she died, and i’m only just beginning to gather slivers of what she knew and practiced.",
+      "the title of the evening, babaylan and the three realms, is a sort of shorthand that refers to our spiritual intercessors and the planes of being that exist beyond the one we ground ourselves in. at 8 pm, on monday october 26, we come together to share in a cosmology that insists the universe is alive with spirit and that all things exist in relationship. i welcome the chance to blur the lines, to remember those who show us to see beyond, and to pull together what’s in between."
+    ],
     items: [
       { name: "pu-erh tea smoked duck humba", lines: ["sweet, tangy, savory with star anise. saba banana, tausi (fermented black beans), ginger rice porridge"] },
       { name: "laing atin langka", lines: ["young jackfruit and taro leaves, simmered in coconut milk and chilis"] },
@@ -64,7 +71,13 @@ const MENUS = {
   },
   "nov 2": {
     dek: "what we inherit, what we bring forth, our place in time",
-    intro: [],
+    intro: [
+      "all souls’ day is the second day of undas. across the islands and the diaspora, families spend the night at the cemetery with candles, cards and food laid out on the graves, staying up with their dead.",
+      "and while our present experiences have us looking to who came before, someday, we’ll be the ones being visited. what people bring and what stories they tell will depend on what we do, create, relate.",
+      "we ask: what does it look like to be a good ancestor, especially in this time? what does it mean to decolonize the future? where do rest and fallow seasons fit?",
+      "these are big questions without definitive answers. i don’t know what will come up when we ask them together, and that’s part of why i want to.",
+      "on monday november 2, at 8 pm, come tell us: what have you received whole that you hope to hand on whole?"
+    ],
     items: [
       { name: "kinilaw", alt: "ceviche", lines: ["salmon, mango, red onion, ginger, sugarcane vinegar"] },
       { name: "almusal", alt: "morning meal", lines: ["daing bangus (marinated and fried milkfish), ebun buru (salted duck egg), tomato, onion, rice"] },
@@ -250,6 +263,7 @@ async function admit({ token, role, guest }) {
   const ok = await loadSessions();
   if (!ok) { clearSession(); resetToGate(); return; }
   openLetter(store.get(K.readKey) ? "returning" : "first");
+  openFromHash();
 }
 // returns false only when the sheet says the token is no longer good
 async function loadSessions() {
@@ -453,6 +467,31 @@ document.addEventListener("click", async (e) => {
 const menuDlg = $("#menu-card");
 const node = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 const menuNights = () => app.sessions.filter((s) => s.menu && s.status !== "cancelled");
+
+/* deep links are keyed by date, not by night: #oct-19 opens whatever is on oct 19 right now
+   (its menu, or its row if no menu yet). also reads #october-19, #oct19, #10-19, #2026-10-19.
+   a date with nothing on it lands on the mondays list. survives the gate (no reload). */
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+const slugFor = (s) => `${s.month}-${s.day}`;
+const setHash = (h) => history.replaceState(null, "", h ? `#${h}` : location.pathname + location.search);
+function dateFromHash(h) {
+  let m = h.match(/^(?:\d{4}-)?(\d{1,2})-(\d{1,2})$/);
+  if (m) return { month: MONTHS[+m[1] - 1], day: String(+m[2]) };
+  m = h.match(/^([a-z]{3})[a-z]*[-_ ]?(\d{1,2})$/);
+  if (m && MONTHS.includes(m[1])) return { month: m[1], day: String(+m[2]) };
+  return null;
+}
+function openFromHash() {
+  const h = decodeURIComponent(location.hash.slice(1)).trim().toLowerCase();
+  if (!h || !app.guest || app.role !== "guest" || body.dataset.view !== "letter") return;
+  const d = dateFromHash(h);
+  if (!d) return;
+  const s = app.sessions.find((x) => x.month.toLowerCase() === d.month && String(+x.day) === d.day);
+  const target = s ? $(`.night[data-session-id="${s.id}"]`) : $("#mondays");
+  if (s && s.menu) { openMenu(s.id); return; }
+  if (target) requestAnimationFrame(() => window.scrollTo(0, target.getBoundingClientRect().top + window.scrollY - 80));
+}
+window.addEventListener("hashchange", openFromHash);
 function renderMenuItems(list, items) {
   list.innerHTML = "";
   items.forEach((it) => {
@@ -502,13 +541,30 @@ function openMenu(id) {
   if (prev) { pb.textContent = `← ${prev.month} ${prev.day}`; pb.dataset.target = prev.id; pb.setAttribute("aria-label", `menu for ${prev.month} ${prev.day}, ${prev.theme}`); }
   if (next) { nb.textContent = `${next.month} ${next.day} →`; nb.dataset.target = next.id; nb.setAttribute("aria-label", `menu for ${next.month} ${next.day}, ${next.theme}`); }
   $("#menu-scroll").scrollTop = 0;
+  setHash(slugFor(s));
   if (!menuDlg.open) menuDlg.showModal();
 }
 $("#menu-close").addEventListener("click", () => menuDlg.close());
+let copyTimer;
+$("#menu-copy").addEventListener("click", async (e) => {
+  const b = e.currentTarget;
+  const s = app.sessions.find((x) => x.id === menuDlg.dataset.sessionId);
+  if (!s) return;
+  const url = `${location.origin}${location.pathname}#${slugFor(s)}`;
+  try { await navigator.clipboard.writeText(url); }
+  catch {
+    const t = Object.assign(document.createElement("textarea"), { value: url });
+    menuDlg.append(t); t.select(); document.execCommand("copy"); t.remove();
+  }
+  b.dataset.state = "copied";
+  clearTimeout(copyTimer);
+  copyTimer = setTimeout(() => (b.dataset.state = "idle"), 2000);
+});
 $("#menu-prev").addEventListener("click", (e) => openMenu(e.currentTarget.dataset.target));
 $("#menu-next").addEventListener("click", (e) => openMenu(e.currentTarget.dataset.target));
 menuDlg.addEventListener("click", (e) => { if (e.target === menuDlg) menuDlg.close(); }); // backdrop click
 menuDlg.addEventListener("close", () => {
+  setHash("");
   const b = $(`.night[data-session-id="${menuDlg.dataset.sessionId}"] [data-action="open-menu"]`);
   if (b && body.dataset.view === "letter") b.focus({ preventScroll: true });
 });

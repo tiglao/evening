@@ -530,12 +530,16 @@ body:has(dialog[open]) { overflow: hidden; }
 .menu::backdrop { background-color: rgba(27, 26, 23, .35); background-image: radial-gradient(circle at 50% 50%, rgba(27, 26, 23, .35) 1.2px, transparent 1.8px); background-size: 6px 6px; }
 .menu__head { flex: none; display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); padding: 8px 12px 8px var(--s-5); border-bottom: 1px solid var(--ink); }
 .menu__meta { margin: 0; font: 500 12px/1.35 var(--font-mono); letter-spacing: .03em; }
+.menu__head-actions { flex: none; display: flex; align-items: center; gap: var(--s-4); }
+.menu__copy { font: 500 13px/1 var(--font-mono); }
+.menu__copy [data-label="copied"], .menu__copy[data-state="copied"] [data-label="idle"] { display: none; }
+.menu__copy[data-state="copied"] [data-label="copied"] { display: inline; }
 .menu__scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 var(--s-6) var(--s-7); }
 .menu__top { padding-top: var(--s-6); text-align: center; }
 .menu__title { margin: 0; font: italic 400 clamp(46px, 9vw, 74px)/.96 var(--font-serif); letter-spacing: -.025em; text-wrap: balance; text-shadow: .03em .02em 0 var(--misreg); }
 .menu__dek { margin: var(--s-3) auto 0; max-width: 28ch; font: italic 400 20px/1.3 var(--font-serif); color: var(--ink-2); text-wrap: balance; }
 .menu__intro { margin-top: var(--s-5); }
-.menu__intro p { margin: 0 auto 1em; max-width: 31em; font-size: 18px; line-height: 1.5; text-align: center; text-wrap: pretty; }
+.menu__intro p { margin: 0 auto 1em; max-width: 31em; font-size: 18px; line-height: 1.5; text-align: left; text-wrap: pretty; }
 .menu__label { position: relative; display: grid; place-items: center; height: 52px; margin: var(--s-6) 0 var(--s-5); }
 .menu__label::before {
   content: ""; position: absolute; inset: 0;
