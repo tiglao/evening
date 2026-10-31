@@ -48,6 +48,11 @@
     a.btn { display: inline-block; text-decoration: none; margin-top: 14px; }
     .pay { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 0 0 20px; }
     .pay a.btn { margin-top: 0; }
+    .tiers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 14px; }
+    .tier { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px; min-height: 44px; text-align: left; color: var(--ink); background: var(--paper-bright); border: 1.5px solid var(--ink); cursor: pointer; }
+    .tier[aria-pressed="true"] { background: var(--ink); color: var(--paper-bright); }
+    .tier__amt { font: 600 18px/1.1 var(--font-serif); }
+    .tier__lbl { font: 500 11.5px/1.3 var(--font-mono); }
     .qr { width: 180px; height: 180px; border: 1.5px solid var(--ink); background: #fff; }
     .btn { font: 600 14px/1 var(--font-mono); letter-spacing: .03em; padding: 14px 18px; min-height: 44px; color: #fff; background: var(--tomato-ink); border: 1.5px solid var(--ink); box-shadow: var(--shadow-print); cursor: pointer; }
     .btn:hover { box-shadow: 4px 4px 0 var(--ink); } .btn:active { box-shadow: 1px 1px 0 var(--ink); }
@@ -148,6 +153,21 @@
         const pay = el("div", "pay"); pay.append(qr, open); a.append(pay);
         amount = el("input"); amount.type = "number"; amount.min = "0"; amount.step = "1"; amount.inputMode = "decimal";
         amount.placeholder = "0 is fine"; amount.value = prev.amount ?? "";
+        // the night's ask, from the sheet: tapping one fills the box, which stays editable
+        if (info.asks && info.asks.length) {
+          a.append(el("p", "label", "the ask for this night (pick one, or type your own)"));
+          const tiers = el("div", "tiers");
+          const chips = info.asks.map((t) => {
+            const b = el("button", "tier"); b.type = "button";
+            b.append(el("span", "tier__amt", `$${t.amount}`), el("span", "tier__lbl", t.label));
+            b.addEventListener("click", () => { amount.value = t.amount; mark(); });
+            tiers.append(b); return { b, t };
+          });
+          const mark = () => chips.forEach(({ b, t }) => b.setAttribute("aria-pressed", String(Number(amount.value) === t.amount && amount.value !== "")));
+          amount.addEventListener("input", mark);
+          a.append(tiers);
+          setTimeout(mark);
+        }
         field("how much are you sending? ($, 0 is fine)", amount);
         method = el("select");
         info.methods.forEach((m) => { const op = el("option", null, m.label); op.value = m.key; op.selected = m.key === prev.method; method.append(op); });
