@@ -46,6 +46,9 @@
     .link { display: block; margin: 18px 0 0; padding: 0; font: 500 12.5px/1.4 var(--font-mono); color: var(--tomato-ink); background: none; border: 0; text-decoration: underline; cursor: pointer; }
     input, select, textarea { display: block; width: 100%; margin-top: 4px; padding: 10px; font: 17px/1.4 var(--font-serif); color: var(--ink); background: var(--paper-bright); border: 1.5px solid var(--ink); border-radius: 0; }
     a.btn { display: inline-block; text-decoration: none; margin-top: 14px; }
+    .pay { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 0 0 20px; }
+    .pay a.btn { margin-top: 0; }
+    .qr { width: 180px; height: 180px; border: 1.5px solid var(--ink); background: #fff; }
     .btn { font: 600 14px/1 var(--font-mono); letter-spacing: .03em; padding: 14px 18px; min-height: 44px; color: #fff; background: var(--tomato-ink); border: 1.5px solid var(--ink); box-shadow: var(--shadow-print); cursor: pointer; }
     .btn:hover { box-shadow: 4px 4px 0 var(--ink); } .btn:active { box-shadow: 1px 1px 0 var(--ink); }
     .btn:disabled { opacity: .7; cursor: default; }
@@ -138,9 +141,14 @@
         info.options.forEach((o) => { const op = el("option", null, o.label); op.value = o.id; op.selected = o.id === (prev.apply || info.pick); sel.append(op); });
         field(`what should happen with your $${info.paid}?`, sel);
       } else if (info.choice.key === "yes") {
+        a.append(el("p", "paid", "to hold your seat, venmo what you can to @archipelaga with “nov 9” and your name in the note."));
+        const qr = el("img", "qr"); qr.src = "venmo-qr.png"; qr.alt = "venmo qr code for @archipelaga"; qr.width = 180; qr.height = 180;
+        const open = el("a", "btn", "open venmo @archipelaga");
+        open.href = "https://venmo.com/u/archipelaga"; open.target = "_blank"; open.rel = "noopener";
+        const pay = el("div", "pay"); pay.append(qr, open); a.append(pay);
         amount = el("input"); amount.type = "number"; amount.min = "0"; amount.step = "1"; amount.inputMode = "decimal";
         amount.placeholder = "0 is fine"; amount.value = prev.amount ?? "";
-        field("how much are you sending to hold your seat? ($)", amount);
+        field("how much are you sending? ($, 0 is fine)", amount);
         method = el("select");
         info.methods.forEach((m) => { const op = el("option", null, m.label); op.value = m.key; op.selected = m.key === prev.method; method.append(op); });
         field("how?", method);
