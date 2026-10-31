@@ -77,7 +77,7 @@ const MENUS = {
       "and while our present experiences have us looking to who came before, someday, we’ll be the ones being visited. what people bring and what stories they tell will depend on what we do, create, relate.",
       "we ask: what does it look like to be a good ancestor, especially in this time? what does it mean to decolonize the future? where do rest and fallow seasons fit?",
       "these are big questions without definitive answers. i don’t know what will come up when we ask them together, and that’s part of why i want to.",
-      "on monday november 2, at 8 pm, come tell us: what have you received whole that you hope to hand on whole?"
+      "on monday november 9, at 8 pm, come tell us: what have you received whole that you hope to hand on whole?"
     ],
     items: [
       { name: "kinilaw", alt: "ceviche", lines: ["salmon, mango, red onion, ginger, sugarcane vinegar"] },
