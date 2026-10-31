@@ -48,11 +48,14 @@
     a.btn { display: inline-block; text-decoration: none; margin-top: 14px; }
     .pay { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 0 0 20px; }
     .pay a.btn { margin-top: 0; }
-    .tiers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 14px; }
-    .tier { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px; min-height: 44px; text-align: left; color: var(--ink); background: var(--paper-bright); border: 1.5px solid var(--ink); cursor: pointer; }
-    .tier[aria-pressed="true"] { background: var(--ink); color: var(--paper-bright); }
-    .tier__amt { font: 600 18px/1.1 var(--font-serif); }
-    .tier__lbl { font: 500 11.5px/1.3 var(--font-mono); }
+    .spectrum { margin: 0 0 20px; }
+    .spectrum__bar { height: 10px; border: 1.5px solid var(--ink); background: linear-gradient(90deg, var(--paper-bright), var(--tomato)); }
+    .spectrum__stops { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 6px; }
+    .spectrum__stop { display: flex; flex-direction: column; gap: 2px; }
+    .spectrum__stop:nth-child(2) { align-items: center; text-align: center; }
+    .spectrum__stop:nth-child(3) { align-items: flex-end; text-align: right; }
+    .spectrum__amt { font: 600 18px/1.1 var(--font-serif); }
+    .spectrum__lbl { font: 500 11.5px/1.3 var(--font-mono); }
     .qr { width: 180px; height: 180px; border: 1.5px solid var(--ink); background: #fff; }
     .btn { font: 600 14px/1 var(--font-mono); letter-spacing: .03em; padding: 14px 18px; min-height: 44px; color: #fff; background: var(--tomato-ink); border: 1.5px solid var(--ink); box-shadow: var(--shadow-print); cursor: pointer; }
     .btn:hover { box-shadow: 4px 4px 0 var(--ink); } .btn:active { box-shadow: 1px 1px 0 var(--ink); }
@@ -153,26 +156,29 @@
         const pay = el("div", "pay"); pay.append(qr, open); a.append(pay);
         amount = el("input"); amount.type = "number"; amount.min = "0"; amount.step = "1"; amount.inputMode = "decimal";
         amount.placeholder = "0 is fine"; amount.value = prev.amount ?? "";
-        // the night's ask, from the sheet: tapping one fills the box, which stays editable
+        // the night's ask, from the sheet, drawn as a range to read; nothing here fills the box
         if (info.asks && info.asks.length) {
-          a.append(el("p", "label", "the ask for this night (pick one, or type your own)"));
-          const tiers = el("div", "tiers");
-          const chips = info.asks.map((t) => {
-            const b = el("button", "tier"); b.type = "button";
-            b.append(el("span", "tier__amt", `$${t.amount}`), el("span", "tier__lbl", t.label));
-            b.addEventListener("click", () => { amount.value = t.amount; mark(); });
-            tiers.append(b); return { b, t };
+          a.append(el("p", "label", "the ask for this night"));
+          const spec = el("figure", "spectrum");
+          spec.setAttribute("role", "img");
+          spec.setAttribute("aria-label", `the ask for this night: ${info.asks.map((t) => `$${t.amount} ${t.label}`).join(", ")}`);
+          const stops = el("div", "spectrum__stops");
+          info.asks.forEach((t) => {
+            const s = el("div", "spectrum__stop"); s.setAttribute("aria-hidden", "true");
+            s.append(el("span", "spectrum__amt", `$${t.amount}`), el("span", "spectrum__lbl", t.label));
+            stops.append(s);
           });
-          const mark = () => chips.forEach(({ b, t }) => b.setAttribute("aria-pressed", String(Number(amount.value) === t.amount && amount.value !== "")));
-          amount.addEventListener("input", mark);
-          a.append(tiers);
-          setTimeout(mark);
+          const bar = el("div", "spectrum__bar"); bar.setAttribute("aria-hidden", "true");
+          spec.append(bar, stops); a.append(spec);
         }
         field("how much are you sending? ($, 0 is fine)", amount);
         method = el("select");
         info.methods.forEach((m) => { const op = el("option", null, m.label); op.value = m.key; op.selected = m.key === prev.method; method.append(op); });
         field("how?", method);
       }
+      const bring = el("input"); bring.type = "text"; bring.maxLength = 200; bring.value = prev.bringing || "";
+      bring.placeholder = "their name";
+      const bringWrap = field("hoping to bring someone? (optional)", bring);
       const note = el("textarea"); note.rows = 5; note.value = prev.note || "";
       const noteWrap = field("your note", note);
       const btn = el("button", "btn"); btn.type = "button";
@@ -180,8 +186,11 @@
       a.append(btn, status);
 
       const wantsNote = () => (paid ? sel.value === "other" : info.choice.note);
+      // anyone headed to a night can name a guest: a yes, or a paid guest picking a night
+      const coming = () => (paid ? !["refund", "other"].includes(sel.value) : info.choice.key === "yes");
       function update() {
         noteWrap.hidden = !wantsNote();
+        bringWrap.hidden = !coming();
         if (wantsNote()) btn.textContent = "send";
         else if (!paid) btn.textContent = `confirm: ${info.choice.label}`;
         else if (sel.value === "refund") btn.textContent = `confirm: refund my $${info.paid}`;
@@ -195,7 +204,8 @@
         if (amount && (amount.value === "" || Number(amount.value) < 0)) { amount.focus(); status.textContent = "add the amount you’re sending (0 is fine)."; return; }
         const answer = {
           apply: sel ? sel.value : "", note: wantsNote() ? note.value : "",
-          amount: amount ? amount.value : "", method: method ? method.value : ""
+          amount: amount ? amount.value : "", method: method ? method.value : "",
+          bringing: coming() ? bring.value : ""
         };
         btn.disabled = true; btn.textContent = "saving…"; status.textContent = "";
         try {
