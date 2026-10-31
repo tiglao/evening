@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300..800;1,6..72,300..800&display=swap">
   <!--
     poll.html: the page the buttons in the nov 9 email open.
-    ?g=<guest id>&pick=<yes|refund|no|other>. nothing is saved until the guest presses
+    ?g=<guest id>&pick=<yes|refund|other>. nothing is saved until the guest presses
     confirm (email scanners open every link). talks to the "evening date poll" apps script
     the same way app.js talks to Code.gs. the menu on the left is read from MENUS in app.js.
   -->
@@ -27,7 +27,8 @@
     * { box-sizing: border-box; }
     body { margin: 0; background: var(--paper); color: var(--ink); font: var(--text-body)/1.5 var(--font-serif); }
     .wrap { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); min-height: 100vh; }
-    .card { background: var(--paper-bright); border-right: 1.5px solid var(--ink); padding: 40px clamp(20px, 4vw, 48px); max-height: 100vh; overflow-y: auto; }
+    /* the menu stays in view while the form scrolls */
+    .card { background: var(--paper-bright); border-right: 1.5px solid var(--ink); padding: 40px clamp(20px, 4vw, 48px); position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto; }
     .act { padding: 40px clamp(20px, 4vw, 48px); align-self: center; max-width: 30rem; }
     .meta, .kicker, .label { font: 500 12.5px/1.4 var(--font-mono); letter-spacing: .04em; margin: 0 0 8px; }
     .kicker { color: var(--tomato-ink); margin-top: 20px; }
@@ -48,6 +49,16 @@
     a.btn { display: inline-block; text-decoration: none; margin-top: 14px; }
     .pay { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 0 0 20px; }
     .pay a.btn { margin-top: 0; }
+    .btn--ghost { color: var(--ink); background: transparent; box-shadow: none; }
+    .btn--ghost:hover { background: var(--paper-bright); box-shadow: none; }
+    .choices { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+    .choice { font: 600 13px/1.25 var(--font-mono); letter-spacing: .02em; padding: 12px 14px; min-height: 44px; text-align: left; color: var(--ink); background: var(--paper-bright); border: 1.5px solid var(--ink); cursor: pointer; }
+    .choice[aria-pressed="true"] { color: var(--paper-bright); background: var(--ink); box-shadow: 3px 3px 0 var(--tomato); }
+    .section[hidden] { display: none; }
+    fieldset.radios { border: 0; padding: 0; min-width: 0; }
+    .radios legend { padding: 0; }
+    .radio { display: flex; align-items: center; gap: 10px; min-height: 36px; cursor: pointer; }
+    .radio input { display: inline-block; width: 18px; height: 18px; margin: 0; accent-color: var(--tomato-ink); }
     .spectrum { margin: 0 0 20px; }
     .spectrum__bar { height: 10px; border: 1.5px solid var(--ink); background: linear-gradient(90deg, var(--paper-bright), var(--tomato)); }
     .spectrum__stops { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 6px; }
@@ -65,7 +76,8 @@
     @media (max-width: 760px) {
       .wrap { grid-template-columns: 1fr; }
       .act { order: -1; padding: 32px 20px; }
-      .card { border-right: 0; border-top: 1.5px solid var(--ink); max-height: none; padding: 32px 20px; }
+      .card { position: static; height: auto; border-right: 0; border-top: 1.5px solid var(--ink); padding: 32px 20px; }
+      .qr { display: none; } /* you can't scan your own phone screen */
     }
   </style>
 </head>
@@ -79,7 +91,7 @@
       <div class="intro" id="intro"></div>
       <ol class="items" id="items"><li>loading the menu…</li></ol>
     </aside>
-    <main class="act" id="act" aria-live="polite"><p class="status">one moment…</p></main>
+    <main class="act" id="act" aria-live="polite"><p class="status">loading… this can take a few seconds.</p></main>
   </div>
   <script>
     const API = "https://script.google.com/macros/s/AKfycbwY2wDIM0FAAumUJ27UqS_CVa4siz9RnTlRZ0zWuSwcq8Rin4gafXVr1QvjbuZstAc/exec";
@@ -133,32 +145,48 @@
       }
     }
 
-    // a guest who paid answers with the dropdown (a night, a refund, or a note); the email
-    // button only sets where it starts. a guest who didn't pay confirms the button they clicked,
-    // and on yes says what they're sending and how (0 is fine).
+    // the answer buttons come first, with the one clicked in the email already pressed.
+    // yes opens the rest: for a guest who paid, which night their money goes toward; for a
+    // guest who didn't, the ask, what they're sending and how (0 is fine). either can name
+    // someone they hope to bring. something else opens a note; refund just confirms.
     // prev holds the last answer, so "change my answer" reopens the form as they left it.
     function showForm(info, prev = {}) {
       const a = $("act"); a.innerHTML = "";
       a.append(el("p", "hi", `hi ${info.name},`));
       const paid = info.paid > 0;
-      const field = (label, input) => { const lab = el("label", "field"); lab.append(el("span", "label", label), input); a.append(lab); return lab; };
-      let sel = null, amount = null, method = null;
+      if (paid) a.append(el("p", "paid", `you paid $${info.paid}.`));
+      let current = info.choices.some((c) => c.key === (prev.pick || pick)) ? (prev.pick || pick) : info.choices[0].key;
+
+      const row = el("div", "choices");
+      row.setAttribute("role", "group"); row.setAttribute("aria-label", "your answer");
+      const choiceBtns = info.choices.map((c) => {
+        const b = el("button", "choice", c.label); b.type = "button";
+        b.addEventListener("click", () => { current = c.key; update(); });
+        row.append(b); return { b, c };
+      });
+      a.append(row);
+
+      const field = (parent, label, input) => { const lab = el("label", "field"); lab.append(el("span", "label", label), input); parent.append(lab); return lab; };
+      const yes = el("div", "section"), other = el("div", "section");
+      a.append(yes, other);
+
+      let sel = null, amount = null, radios = [];
       if (paid) {
-        a.append(el("p", "paid", `you paid $${info.paid}.`));
         sel = el("select");
-        info.options.forEach((o) => { const op = el("option", null, o.label); op.value = o.id; op.selected = o.id === (prev.apply || info.pick); sel.append(op); });
-        field(`what should happen with your $${info.paid}?`, sel);
-      } else if (info.choice.key === "yes") {
-        a.append(el("p", "paid", "to hold your seat, venmo what you can to @archipelaga with “nov 9” and your name in the note."));
+        info.options.filter((o) => o.id !== "refund" && o.id !== "other").forEach((o) => {
+          const op = el("option", null, o.label); op.value = o.id; op.selected = o.id === (prev.apply || info.sessionId); sel.append(op);
+        });
+        field(yes, `put your $${info.paid} toward`, sel);
+        sel.addEventListener("change", () => update());
+      } else {
+        yes.append(el("p", "paid", "to hold your seat, venmo what you can to @archipelaga with “nov 9” and your name in the note."));
         const qr = el("img", "qr"); qr.src = "venmo-qr.png"; qr.alt = "venmo qr code for @archipelaga"; qr.width = 180; qr.height = 180;
-        const open = el("a", "btn", "open venmo @archipelaga");
+        const open = el("a", "btn btn--ghost", "open venmo @archipelaga");
         open.href = "https://venmo.com/u/archipelaga"; open.target = "_blank"; open.rel = "noopener";
-        const pay = el("div", "pay"); pay.append(qr, open); a.append(pay);
-        amount = el("input"); amount.type = "number"; amount.min = "0"; amount.step = "1"; amount.inputMode = "decimal";
-        amount.placeholder = "0 is fine"; amount.value = prev.amount ?? "";
+        const pay = el("div", "pay"); pay.append(qr, open); yes.append(pay);
         // the night's ask, from the sheet, drawn as a range to read; nothing here fills the box
         if (info.asks && info.asks.length) {
-          a.append(el("p", "label", "the ask for this night"));
+          yes.append(el("p", "label", "the ask for this night"));
           const spec = el("figure", "spectrum");
           spec.setAttribute("role", "img");
           spec.setAttribute("aria-label", `the ask for this night: ${info.asks.map((t) => `$${t.amount} ${t.label}`).join(", ")}`);
@@ -169,50 +197,61 @@
             stops.append(s);
           });
           const bar = el("div", "spectrum__bar"); bar.setAttribute("aria-hidden", "true");
-          spec.append(bar, stops); a.append(spec);
+          spec.append(bar, stops); yes.append(spec);
         }
-        field("how much are you sending? ($, 0 is fine)", amount);
-        method = el("select");
-        info.methods.forEach((m) => { const op = el("option", null, m.label); op.value = m.key; op.selected = m.key === prev.method; method.append(op); });
-        field("how?", method);
+        amount = el("input"); amount.type = "number"; amount.min = "0"; amount.step = "1"; amount.inputMode = "decimal";
+        amount.value = prev.amount ?? "";
+        field(yes, "how much are you sending? ($, 0 is fine)", amount);
+        const how = el("fieldset", "field radios");
+        how.append(el("legend", "label", "how?"));
+        radios = info.methods.map((m, i) => {
+          const r = el("input"); r.type = "radio"; r.name = "method"; r.value = m.key;
+          r.checked = prev.method ? m.key === prev.method : i === 0;
+          const lab = el("label", "radio"); lab.append(r, el("span", null, m.label)); how.append(lab);
+          return r;
+        });
+        yes.append(how);
       }
       const bring = el("input"); bring.type = "text"; bring.maxLength = 200; bring.value = prev.bringing || "";
       bring.placeholder = "their name";
-      const bringWrap = field("hoping to bring someone? (optional)", bring);
+      field(yes, "hoping to bring someone? (optional)", bring);
       const note = el("textarea"); note.rows = 5; note.value = prev.note || "";
-      const noteWrap = field("your note", note);
+      field(other, "your note", note);
+
       const btn = el("button", "btn"); btn.type = "button";
       const status = el("p", "status");
       a.append(btn, status);
 
-      const wantsNote = () => (paid ? sel.value === "other" : info.choice.note);
-      // anyone headed to a night can name a guest: a yes, or a paid guest picking a night
-      const coming = () => (paid ? !["refund", "other"].includes(sel.value) : info.choice.key === "yes");
       function update() {
-        noteWrap.hidden = !wantsNote();
-        bringWrap.hidden = !coming();
-        if (wantsNote()) btn.textContent = "send";
-        else if (!paid) btn.textContent = `confirm: ${info.choice.label}`;
-        else if (sel.value === "refund") btn.textContent = `confirm: refund my $${info.paid}`;
-        else btn.textContent = `confirm: put $${info.paid} toward ${sel.options[sel.selectedIndex].text}`;
+        choiceBtns.forEach(({ b, c }) => b.setAttribute("aria-pressed", String(c.key === current)));
+        yes.hidden = current !== "yes";
+        other.hidden = current !== "other";
+        status.textContent = "";
+        if (current === "other") btn.textContent = "send";
+        else if (current === "refund") btn.textContent = `confirm: refund my $${info.paid}`;
+        else if (paid) btn.textContent = `confirm: put $${info.paid} toward ${sel.options[sel.selectedIndex].text}`;
+        else btn.textContent = "confirm: yes, i’ll be there nov 9";
       }
-      if (sel) sel.addEventListener("change", update);
       update();
 
       btn.addEventListener("click", async () => {
-        if (wantsNote() && !note.value.trim()) { note.focus(); status.textContent = "write a note first."; return; }
-        if (amount && (amount.value === "" || Number(amount.value) < 0)) { amount.focus(); status.textContent = "add the amount you’re sending (0 is fine)."; return; }
+        if (current === "other" && !note.value.trim()) { note.focus(); status.textContent = "write a note first."; return; }
+        if (current === "yes" && amount && (amount.value === "" || Number(amount.value) < 0)) { amount.focus(); status.textContent = "add the amount you’re sending (0 is fine)."; return; }
+        const checked = radios.find((r) => r.checked);
         const answer = {
-          apply: sel ? sel.value : "", note: wantsNote() ? note.value : "",
-          amount: amount ? amount.value : "", method: method ? method.value : "",
-          bringing: coming() ? bring.value : ""
+          pick: current,
+          apply: !paid ? "" : current === "yes" ? sel.value : current,
+          note: current === "other" ? note.value : "",
+          amount: !paid && current === "yes" ? amount.value : "",
+          method: !paid && current === "yes" && checked ? checked.value : "",
+          bringing: current === "yes" ? bring.value : ""
         };
         btn.disabled = true; btn.textContent = "saving…"; status.textContent = "";
         try {
-          const r = await call("record", { g, pick, ...answer });
+          const r = await call("record", { g, ...answer });
           say(r.message);
           if (r.venmo) {
-            const v = el("a", "btn", "venmo @archipelaga");
+            const v = el("a", "btn btn--ghost", "open venmo @archipelaga");
             v.href = "https://venmo.com/u/archipelaga"; v.target = "_blank"; v.rel = "noopener";
             $("act").append(v);
           }
