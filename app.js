@@ -31,14 +31,15 @@ const CONFIG = {
 };
 
 /* ---------- menus ----------
-   edited here by hand (the sheet doesn't hold menus). keyed by "month day" as the sheet shows it,
-   e.g. "oct 19". a night with no entry shows "menu still being written".
+   edited here by hand (the sheet doesn't hold menus). keyed by the night's SESSION ID on the
+   Sessions tab, e.g. "S03", so a menu stays with its dinner when the date moves. an older
+   "month day" key ("oct 19") still works. a night with no entry shows "menu still being written".
      {dek, intro: [paragraph, ...], items: [item, ...]}   items render in order
      item: {name, alt, sub, lines: [..]}   dish  -> "name / alt", italic sub, plain lines
            {kind:"drink", name, desc}      drink -> "name // desc"
            {kind:"tbd"}                    a "??" slot */
 const MENUS = {
-  "oct 19": {
+  "S03": {
     dek: "",
     intro: [
       "we start at 11 pm, the part of a wake when the visitors have gone home and the ones staying up with the dead pull their chairs in closer. the way death tends to get handled in this country, quietly and kept out of sight, has always felt foreign to me. for filipinos who keep our old traditions, death is something we keep close: we feed our dead, we talk to them, we set food out for them. they’re never really gone. in the old belief, our dead become anito, ancestor spirits who stay close and keep watch over us. our wakes are long, social and full of food. at undas, families spend the night at the cemetery with candles, cards and a feast laid out on the graves, more reunion than mourning. for one night, let’s talk about death out loud, and celebrate the people who’ve passed on the way they deserve: with food, drink and stories.",
@@ -53,7 +54,7 @@ const MENUS = {
       { kind: "drink", name: "riesling", desc: "mosel, germany" }
     ]
   },
-  "oct 26": {
+  "S04": {
     dek: "filipino cosmology and our spiritual ancestors",
     intro: [
       "it was only after my grandmother on my dad's side passed that i started to hear about a depth of knowledge she held quietly. here and there, i would hear stories. like how my dad would wake in the night to her hand on his center, whispering something he couldn’t make out. how she would ferry the sick out onto the river when the fog was thick and the night was dark, and immerse them in the healing waters of our precolonial god.",
@@ -69,7 +70,7 @@ const MENUS = {
       { kind: "tbd" }
     ]
   },
-  "nov 2": {
+  "S05": {
     dek: "what we inherit, what we bring forth, our place in time",
     intro: [
       "all souls’ day is the second day of undas. across the islands and the diaspora, families spend the night at the cemetery with candles, cards and food laid out on the graves, staying up with their dead.",
@@ -88,7 +89,7 @@ const MENUS = {
       { kind: "tbd" }
     ]
   },
-  "nov 9": {
+  "S06": {
     dek: "love songs",
     intro: [],
     items: [
@@ -271,7 +272,7 @@ async function loadSessions() {
   try { r = await api.listSessions(app.token); } catch { r = { status: "offline" }; }
   if (r.status === "invalid") return false;
   if (r.status === "ok" && r.example) renderExample(r.example);
-  app.sessions = (r.sessions || []).map((s) => ({ ...s, menu: MENUS[menuKey(s)] || null }));
+  app.sessions = (r.sessions || []).map((s) => ({ ...s, menu: MENUS[s.id] || MENUS[menuKey(s)] || null }));
   app.signers = r.signers || [];
   renderNights(r.status !== "ok");
   renderSigners();
