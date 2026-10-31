@@ -101,6 +101,29 @@ const MENUS = {
       { kind: "tbd" },
       { kind: "tbd" }
     ]
+  },
+  "S07": {
+    dek: "west african and taino roots in the puerto rican kitchen",
+    intro: [
+      "this is what thanksgiving (day of mourning) tastes like in a puerto rican house.",
+      "thanksgiving arrived in the diaspora after the united states colonized our islas too. we could not stand the dry bird and the canned sides, so we made the day ours: a cheap turkey rubbed down like a lechón, a day off spent with the people we love, our own music, our own instruments, dominoes slapped down on a folding table. nothing about how we spend it is american except the date. this is a small way we practice resistance.",
+      "tonight is that, for you. look at the ingredients on the table and touch them. the achiote came from my mother’s and my aunt’s garden. dance if you want. sit down at the dominoes table AND PLAY. eat a lot. this is what our joy and our resilience taste like.",
+      "— jazz"
+    ],
+    items: [
+      { name: "plantain chips", lines: ["garlic mojo with lime and lemon."] },
+      { name: "tostón cups", lines: ["twice-fried plantain, pico, shrimp a la criolla."] },
+      { name: "pavochón with mofongo stuffing", lines: ["turkey seasoned like a whole roast pig, stuffing made of green plantains fried and mashed with garlic, butter, chicharrón and seasonings, carved on banana leaf."] },
+      { name: "arroz con gandules", lines: ["rice and pigeon peas, fresh sofrito, achiote oil."] },
+      { name: "guineos en escabeche", lines: ["boiled green bananas under pickled onion."] },
+      { name: "canoas de plátano", lines: ["sweet plantain boats, picadillo, cheese, cilantro-lime crema."] },
+      { name: "ensalada de papa", lines: ["potato salad, our way."] },
+      { name: "arroz con dulce", lines: ["spiced tea, coconut, rum-soaked raisins."] },
+      { kind: "drink", name: "tamarindo", desc: "tamarind pod juice, over ice" },
+      { kind: "drink", name: "coquito", desc: "coconut, rum, spice" },
+      { kind: "drink", name: "ginger tea", desc: "ginger, cinnamon, clove, star anise" },
+      { kind: "drink", name: "cafecito", desc: "brewed in a greca" }
+    ]
   }
 };
 const menuKey = (s) => `${String(s.month || "").toLowerCase()} ${Number(s.day) || s.day}`;
