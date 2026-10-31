@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>evening · nov 9</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍅</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300..800;1,6..72,300..800&display=swap">
+  <!--
+    poll.html: the page the buttons in the nov 9 email open.
+    ?g=<guest id>&pick=<yes|refund|no|other>. nothing is saved until the guest presses
+    confirm (email scanners open every link). talks to the "evening date poll" apps script
+    the same way app.js talks to Code.gs. the menu on the left is read from MENUS in app.js.
+  -->
+  <style>
+    :root {
+      --paper: #F2EBDD; --paper-bright: #F8F3E9; --ink: #1B1A17;
+      --tomato: #D93A1E; --tomato-ink: #B52D13;
+      --font-serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      --text-body: clamp(18px, 0.9vw + 13.5px, 21px);
+      --shadow-print: 3px 3px 0 var(--ink);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: var(--text-body)/1.5 var(--font-serif); }
+    .wrap { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); min-height: 100vh; }
+    .card { background: var(--paper-bright); border-right: 1.5px solid var(--ink); padding: 40px clamp(20px, 4vw, 48px); max-height: 100vh; overflow-y: auto; }
+    .act { padding: 40px clamp(20px, 4vw, 48px); align-self: center; max-width: 30rem; }
+    .meta, .kicker, .label { font: 500 12.5px/1.4 var(--font-mono); letter-spacing: .04em; margin: 0 0 8px; }
+    .kicker { color: var(--tomato-ink); margin-top: 20px; }
+    h1 { font-style: italic; font-weight: 500; font-size: clamp(40px, 5vw, 60px); line-height: 1; margin: 0 0 10px; text-shadow: 2px 2px 0 var(--tomato); }
+    .dek { font-style: italic; margin: 0 0 20px; }
+    .intro p { margin: 0 0 14px; }
+    .items { list-style: none; padding: 0; margin: 24px 0 0; border-top: 1.5px solid var(--ink); }
+    .items li { padding: 12px 0; border-bottom: 1px dashed rgba(27, 26, 23, .35); }
+    .items p { margin: 2px 0 0; }
+    .nm { font-weight: 600; } .alt { font-style: italic; font-weight: 400; } .sub { font-style: italic; }
+    .tbd { font-family: var(--font-mono); letter-spacing: .2em; }
+    .hi { font-style: italic; font-size: 1.3em; margin: 0 0 12px; }
+    .paid { margin: 0 0 16px; }
+    .field { display: block; margin: 0 0 18px; }
+    select, textarea { display: block; width: 100%; margin-top: 4px; padding: 10px; font: 17px/1.4 var(--font-serif); color: var(--ink); background: var(--paper-bright); border: 1.5px solid var(--ink); border-radius: 0; }
+    .btn { font: 600 14px/1 var(--font-mono); letter-spacing: .03em; padding: 14px 18px; min-height: 44px; color: #fff; background: var(--tomato-ink); border: 1.5px solid var(--ink); box-shadow: var(--shadow-print); cursor: pointer; }
+    .btn:hover { box-shadow: 4px 4px 0 var(--ink); } .btn:active { box-shadow: 1px 1px 0 var(--ink); }
+    .btn:disabled { opacity: .7; cursor: default; }
+    .status { font: 500 12.5px/1.4 var(--font-mono); margin: 14px 0 0; }
+    :focus-visible { outline: 3px solid #2B59C3; outline-offset: 2px; }
+    @media (max-width: 760px) {
+      .wrap { grid-template-columns: 1fr; }
+      .act { order: -1; padding: 32px 20px; }
+      .card { border-right: 0; border-top: 1.5px solid var(--ink); max-height: none; padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <aside class="card" aria-label="the menu">
+      <p class="meta" id="meta"></p>
+      <p class="kicker">a possible menu</p>
+      <h1 id="theme"></h1>
+      <p class="dek" id="dek" hidden></p>
+      <div class="intro" id="intro"></div>
+      <ol class="items" id="items"><li>loading the menu…</li></ol>
+    </aside>
+    <main class="act" id="act" aria-live="polite"><p class="status">one moment…</p></main>
+  </div>
+  <script>
+    const API = "https://script.google.com/macros/s/AKfycbwY2wDIM0FAAumUJ27UqS_CVa4siz9RnTlRZ0zWuSwcq8Rin4gafXVr1QvjbuZstAc/exec";
+    const q = new URLSearchParams(location.search);
+    const g = (q.get("g") || "").replace(/[^a-z0-9]/gi, "");
+    const pick = q.get("pick") || "";
+    const $ = (id) => document.getElementById(id);
+    const el = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
+
+    // a text/plain POST, like app.js, so the browser skips the CORS preflight apps script can't answer
+    async function call(action, payload) {
+      const res = await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action, ...payload }),
+        redirect: "follow"
+      });
+      if (!res.ok) throw new Error(`http ${res.status}`);
+      return res.json();
+    }
+    function say(text) { const a = $("act"); a.innerHTML = ""; a.append(el("p", "hi", text)); }
+
+    // the same menu the site's card shows: MENUS in app.js, by session id, then by its old date key
+    async function showMenu(sessionId, oldKey) {
+      const list = $("items");
+      try {
+        const src = await (await fetch("app.js", { cache: "no-store" })).text();
+        const a = src.indexOf("const MENUS = {"), b = src.indexOf("\n};", a);
+        const all = new Function(`return ${src.slice(a + 14, b + 2)}`)();
+        const m = all[sessionId] || all[oldKey];
+        list.innerHTML = "";
+        if (!m) { list.append(el("li", null, "menu still being written")); return; }
+        if (m.dek) { $("dek").textContent = m.dek; $("dek").hidden = false; }
+        (m.intro || []).forEach((p) => $("intro").append(el("p", null, p)));
+        (m.items || []).forEach((it) => {
+          const li = el("li");
+          if (it.kind === "tbd") li.append(el("span", "tbd", "??"));
+          else if (it.kind === "drink") { const p = el("p", "nm", it.name); p.append(el("span", "alt", ` // ${it.desc || ""}`)); li.append(p); }
+          else {
+            const p = el("p", "nm", it.name);
+            if (it.alt) p.append(el("span", "alt", ` / ${it.alt}`));
+            li.append(p);
+            if (it.sub) li.append(el("p", "sub", it.sub));
+            (it.lines || []).forEach((l) => li.append(el("p", null, l)));
+          }
+          list.append(li);
+        });
+      } catch {
+        list.innerHTML = "";
+        list.append(el("li", null, "the menu didn’t load. it’s on tiglao.github.io/evening."));
+      }
+    }
+
+    function showForm(info) {
+      const a = $("act"); a.innerHTML = "";
+      a.append(el("p", "hi", `hi ${info.name},`));
+      let sel = null, note = null;
+      if (info.paid > 0) {
+        a.append(el("p", "paid", `you paid $${info.paid}.`));
+        const lab = el("label", "field"); lab.append(el("span", "label", "put it toward"));
+        sel = el("select");
+        info.options.forEach((o) => { const op = el("option", null, o.label); op.value = o.id; op.selected = o.id === info.pick; sel.append(op); });
+        lab.append(sel); a.append(lab);
+      }
+      if (info.choice.note) {
+        const lab = el("label", "field"); lab.append(el("span", "label", "your note"));
+        note = el("textarea"); note.rows = 5; lab.append(note); a.append(lab);
+      }
+      const btn = el("button", "btn", info.choice.note ? "send" : `confirm: ${info.choice.label}`);
+      btn.type = "button";
+      const status = el("p", "status");
+      a.append(btn, status);
+      btn.addEventListener("click", async () => {
+        if (note && !note.value.trim()) { note.focus(); status.textContent = "write a note first."; return; }
+        btn.disabled = true; btn.textContent = "saving…"; status.textContent = "";
+        try {
+          const r = await call("record", { g, pick, note: note ? note.value : "", apply: sel ? sel.value : "" });
+          say(r.message);
+        } catch {
+          btn.disabled = false; btn.textContent = "try again";
+          status.textContent = "that didn’t save. try again, or reply to the email.";
+        }
+      });
+    }
+
+    (async () => {
+      if (!g || !pick) { say("that link looks incomplete. reply to the email and tell me what works."); return; }
+      let info;
+      try { info = await call("info", { g, pick }); }
+      catch { say("something went wrong loading this. reply to the email and tell me what works."); return; }
+      if (info.card) { $("meta").textContent = info.card.meta; $("theme").textContent = info.card.theme; }
+      showMenu(info.sessionId, info.oldMenuKey);
+      if (info.status === "ok") showForm(info); else say(info.message);
+    })();
+  </script>
+</body>
+</html>
