@@ -42,6 +42,7 @@
     .hi { font-style: italic; font-size: 1.3em; margin: 0 0 12px; }
     .paid { margin: 0 0 16px; }
     .field { display: block; margin: 0 0 18px; }
+    .field[hidden] { display: none; }
     select, textarea { display: block; width: 100%; margin-top: 4px; padding: 10px; font: 17px/1.4 var(--font-serif); color: var(--ink); background: var(--paper-bright); border: 1.5px solid var(--ink); border-radius: 0; }
     .btn { font: 600 14px/1 var(--font-mono); letter-spacing: .03em; padding: 14px 18px; min-height: 44px; color: #fff; background: var(--tomato-ink); border: 1.5px solid var(--ink); box-shadow: var(--shadow-print); cursor: pointer; }
     .btn:hover { box-shadow: 4px 4px 0 var(--ink); } .btn:active { box-shadow: 1px 1px 0 var(--ink); }
@@ -119,33 +120,45 @@
       }
     }
 
+    // a guest who paid answers with the dropdown (a night, a refund, or a note); the email
+    // button only sets where it starts. a guest who didn't pay just confirms the button they clicked.
     function showForm(info) {
       const a = $("act"); a.innerHTML = "";
       a.append(el("p", "hi", `hi ${info.name},`));
-      let sel = null, note = null;
-      if (info.paid > 0) {
+      const paid = info.paid > 0;
+      let sel = null;
+      if (paid) {
         a.append(el("p", "paid", `you paid $${info.paid}.`));
-        const lab = el("label", "field"); lab.append(el("span", "label", "put it toward"));
+        const lab = el("label", "field"); lab.append(el("span", "label", `what should happen with your $${info.paid}?`));
         sel = el("select");
         info.options.forEach((o) => { const op = el("option", null, o.label); op.value = o.id; op.selected = o.id === info.pick; sel.append(op); });
         lab.append(sel); a.append(lab);
       }
-      if (info.choice.note) {
-        const lab = el("label", "field"); lab.append(el("span", "label", "your note"));
-        note = el("textarea"); note.rows = 5; lab.append(note); a.append(lab);
-      }
-      const btn = el("button", "btn", info.choice.note ? "send" : `confirm: ${info.choice.label}`);
-      btn.type = "button";
+      const noteWrap = el("label", "field"); noteWrap.append(el("span", "label", "your note"));
+      const note = el("textarea"); note.rows = 5; noteWrap.append(note); a.append(noteWrap);
+      const btn = el("button", "btn"); btn.type = "button";
       const status = el("p", "status");
       a.append(btn, status);
+
+      const wantsNote = () => (paid ? sel.value === "other" : info.choice.note);
+      function update() {
+        noteWrap.hidden = !wantsNote();
+        if (wantsNote()) btn.textContent = "send";
+        else if (!paid) btn.textContent = `confirm: ${info.choice.label}`;
+        else if (sel.value === "refund") btn.textContent = `confirm: refund my $${info.paid}`;
+        else btn.textContent = `confirm: put $${info.paid} toward ${sel.options[sel.selectedIndex].text}`;
+      }
+      if (sel) sel.addEventListener("change", update);
+      update();
+
       btn.addEventListener("click", async () => {
-        if (note && !note.value.trim()) { note.focus(); status.textContent = "write a note first."; return; }
+        if (wantsNote() && !note.value.trim()) { note.focus(); status.textContent = "write a note first."; return; }
         btn.disabled = true; btn.textContent = "saving…"; status.textContent = "";
         try {
-          const r = await call("record", { g, pick, note: note ? note.value : "", apply: sel ? sel.value : "" });
+          const r = await call("record", { g, pick, note: wantsNote() ? note.value : "", apply: sel ? sel.value : "" });
           say(r.message);
         } catch {
-          btn.disabled = false; btn.textContent = "try again";
+          btn.disabled = false; update();
           status.textContent = "that didn’t save. try again, or reply to the email.";
         }
       });
