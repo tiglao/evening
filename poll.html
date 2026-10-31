@@ -44,6 +44,7 @@
     .field { display: block; margin: 0 0 18px; }
     .field[hidden] { display: none; }
     select, textarea { display: block; width: 100%; margin-top: 4px; padding: 10px; font: 17px/1.4 var(--font-serif); color: var(--ink); background: var(--paper-bright); border: 1.5px solid var(--ink); border-radius: 0; }
+    a.btn { display: inline-block; text-decoration: none; }
     .btn { font: 600 14px/1 var(--font-mono); letter-spacing: .03em; padding: 14px 18px; min-height: 44px; color: #fff; background: var(--tomato-ink); border: 1.5px solid var(--ink); box-shadow: var(--shadow-print); cursor: pointer; }
     .btn:hover { box-shadow: 4px 4px 0 var(--ink); } .btn:active { box-shadow: 1px 1px 0 var(--ink); }
     .btn:disabled { opacity: .7; cursor: default; }
@@ -157,6 +158,11 @@
         try {
           const r = await call("record", { g, pick, note: wantsNote() ? note.value : "", apply: sel ? sel.value : "" });
           say(r.message);
+          if (r.venmo) {
+            const v = el("a", "btn", "venmo @archipelaga");
+            v.href = "https://venmo.com/u/archipelaga"; v.target = "_blank"; v.rel = "noopener";
+            $("act").append(v);
+          }
         } catch {
           btn.disabled = false; update();
           status.textContent = "that didn’t save. try again, or reply to the email.";
