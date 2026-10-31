@@ -43,8 +43,9 @@
     .paid { margin: 0 0 16px; }
     .field { display: block; margin: 0 0 18px; }
     .field[hidden] { display: none; }
-    select, textarea { display: block; width: 100%; margin-top: 4px; padding: 10px; font: 17px/1.4 var(--font-serif); color: var(--ink); background: var(--paper-bright); border: 1.5px solid var(--ink); border-radius: 0; }
-    a.btn { display: inline-block; text-decoration: none; }
+    .link { display: block; margin: 18px 0 0; padding: 0; font: 500 12.5px/1.4 var(--font-mono); color: var(--tomato-ink); background: none; border: 0; text-decoration: underline; cursor: pointer; }
+    input, select, textarea { display: block; width: 100%; margin-top: 4px; padding: 10px; font: 17px/1.4 var(--font-serif); color: var(--ink); background: var(--paper-bright); border: 1.5px solid var(--ink); border-radius: 0; }
+    a.btn { display: inline-block; text-decoration: none; margin-top: 14px; }
     .btn { font: 600 14px/1 var(--font-mono); letter-spacing: .03em; padding: 14px 18px; min-height: 44px; color: #fff; background: var(--tomato-ink); border: 1.5px solid var(--ink); box-shadow: var(--shadow-print); cursor: pointer; }
     .btn:hover { box-shadow: 4px 4px 0 var(--ink); } .btn:active { box-shadow: 1px 1px 0 var(--ink); }
     .btn:disabled { opacity: .7; cursor: default; }
@@ -122,21 +123,30 @@
     }
 
     // a guest who paid answers with the dropdown (a night, a refund, or a note); the email
-    // button only sets where it starts. a guest who didn't pay just confirms the button they clicked.
-    function showForm(info) {
+    // button only sets where it starts. a guest who didn't pay confirms the button they clicked,
+    // and on yes says what they're sending and how (0 is fine).
+    // prev holds the last answer, so "change my answer" reopens the form as they left it.
+    function showForm(info, prev = {}) {
       const a = $("act"); a.innerHTML = "";
       a.append(el("p", "hi", `hi ${info.name},`));
       const paid = info.paid > 0;
-      let sel = null;
+      const field = (label, input) => { const lab = el("label", "field"); lab.append(el("span", "label", label), input); a.append(lab); return lab; };
+      let sel = null, amount = null, method = null;
       if (paid) {
         a.append(el("p", "paid", `you paid $${info.paid}.`));
-        const lab = el("label", "field"); lab.append(el("span", "label", `what should happen with your $${info.paid}?`));
         sel = el("select");
-        info.options.forEach((o) => { const op = el("option", null, o.label); op.value = o.id; op.selected = o.id === info.pick; sel.append(op); });
-        lab.append(sel); a.append(lab);
+        info.options.forEach((o) => { const op = el("option", null, o.label); op.value = o.id; op.selected = o.id === (prev.apply || info.pick); sel.append(op); });
+        field(`what should happen with your $${info.paid}?`, sel);
+      } else if (info.choice.key === "yes") {
+        amount = el("input"); amount.type = "number"; amount.min = "0"; amount.step = "1"; amount.inputMode = "decimal";
+        amount.placeholder = "0 is fine"; amount.value = prev.amount ?? "";
+        field("how much are you sending to hold your seat? ($)", amount);
+        method = el("select");
+        info.methods.forEach((m) => { const op = el("option", null, m.label); op.value = m.key; op.selected = m.key === prev.method; method.append(op); });
+        field("how?", method);
       }
-      const noteWrap = el("label", "field"); noteWrap.append(el("span", "label", "your note"));
-      const note = el("textarea"); note.rows = 5; noteWrap.append(note); a.append(noteWrap);
+      const note = el("textarea"); note.rows = 5; note.value = prev.note || "";
+      const noteWrap = field("your note", note);
       const btn = el("button", "btn"); btn.type = "button";
       const status = el("p", "status");
       a.append(btn, status);
@@ -154,15 +164,23 @@
 
       btn.addEventListener("click", async () => {
         if (wantsNote() && !note.value.trim()) { note.focus(); status.textContent = "write a note first."; return; }
+        if (amount && (amount.value === "" || Number(amount.value) < 0)) { amount.focus(); status.textContent = "add the amount you’re sending (0 is fine)."; return; }
+        const answer = {
+          apply: sel ? sel.value : "", note: wantsNote() ? note.value : "",
+          amount: amount ? amount.value : "", method: method ? method.value : ""
+        };
         btn.disabled = true; btn.textContent = "saving…"; status.textContent = "";
         try {
-          const r = await call("record", { g, pick, note: wantsNote() ? note.value : "", apply: sel ? sel.value : "" });
+          const r = await call("record", { g, pick, ...answer });
           say(r.message);
           if (r.venmo) {
             const v = el("a", "btn", "venmo @archipelaga");
             v.href = "https://venmo.com/u/archipelaga"; v.target = "_blank"; v.rel = "noopener";
             $("act").append(v);
           }
+          const again = el("button", "link", "change my answer"); again.type = "button";
+          again.addEventListener("click", () => showForm(info, answer));
+          $("act").append(again);
         } catch {
           btn.disabled = false; update();
           status.textContent = "that didn’t save. try again, or reply to the email.";
