@@ -157,8 +157,8 @@
     }
 
     // the answer buttons come first, with the one clicked in the email already pressed.
-    // yes opens the rest: for a guest who paid, which night their money goes toward; for a
-    // guest who didn't, the ask, what they're sending and how (0 is fine). either can name
+    // yes opens the rest: which night, and the form follows it. a guest who paid puts their money
+    // toward it; a guest who didn't sees its ask, what they're sending and how (0 is fine). either can name
     // someone they hope to bring. something else opens a note; refund just confirms.
     // prev holds the last answer, so "change my answer" reopens the form as they left it.
     function showForm(info, menus, prev = {}) {
@@ -172,7 +172,7 @@
       row.setAttribute("role", "group"); row.setAttribute("aria-label", "your answer");
       const choiceBtns = info.choices.map((c) => {
         const b = el("button", "choice", c.label); b.type = "button";
-        b.addEventListener("click", () => { current = c.key; peek = null; update(); });
+        b.addEventListener("click", () => { current = c.key; update(); });
         row.append(b); return { b, c };
       });
       a.append(row);
@@ -189,39 +189,23 @@
       // the menu column swaps on its own; on a phone it sits below the form, so this jumps to it
       const jump = () => { const c = $("menu"); c.scrollIntoView({ behavior: "smooth", block: "start" }); c.focus({ preventScroll: true }); };
 
-      let sel = null, amount = null, radios = [], seeMenu = null, shown = null, peek = null;
-      if (paid) {
-        sel = el("select");
-        info.options.filter((o) => o.id !== "refund" && o.id !== "other").forEach((o) => {
-          const has = !!menuFor(menus, o.id, o.id === info.sessionId ? info.oldMenuKey : "");
-          const op = el("option", null, o.label + (has ? " \u00b7 menu\u2019s up" : "")); op.value = o.id; op.selected = o.id === (prev.apply || info.sessionId); sel.append(op);
-        });
-        field(yes, `put your $${info.paid} toward`, sel).classList.add("tight");
-        seeMenu = el("button", "link see", ""); seeMenu.type = "button";
-        seeMenu.addEventListener("click", jump);
-        yes.append(seeMenu);
-        sel.addEventListener("change", () => { peek = null; update(); });
-      } else {
-        yes.append(el("p", "paid", `to hold your ${info.plusOnes ? "seats" : "seat"}, venmo what you can to @archipelaga with “nov 9” and your name in the note.`));
+      let amount = null, radios = [], hold = null, askBox = null, shown = null;
+      const sel = el("select");
+      nights.filter((o) => o.card).forEach((o) => {
+        const op = el("option", null, o.label + (menuOf(o.id) ? " · menu’s up" : "")); op.value = o.id; op.selected = o.id === (prev.apply || info.sessionId); sel.append(op);
+      });
+      field(yes, paid ? `put your $${info.paid} toward` : "which night?", sel).classList.add("tight");
+      const seeMenu = el("button", "link see", ""); seeMenu.type = "button";
+      seeMenu.addEventListener("click", jump);
+      yes.append(seeMenu);
+      sel.addEventListener("change", () => update());
+      if (!paid) {
+        hold = el("p", "paid"); yes.append(hold);
         const qr = el("img", "qr"); qr.src = "venmo-qr.png"; qr.alt = "venmo qr code for @archipelaga"; qr.width = 180; qr.height = 180;
         const open = el("a", "btn btn--ghost", "open venmo @archipelaga");
         open.href = "https://venmo.com/u/archipelaga"; open.target = "_blank"; open.rel = "noopener";
         const pay = el("div", "pay"); pay.append(qr, open); yes.append(pay);
-        // the night's ask, from the sheet, drawn as a range to read; nothing here fills the box
-        if (info.asks && info.asks.length) {
-          yes.append(el("p", "label", "the ask for this night"));
-          const spec = el("figure", "spectrum");
-          spec.setAttribute("role", "img");
-          spec.setAttribute("aria-label", `the ask for this night: ${info.asks.map((t) => `$${t.amount} ${t.label}`).join(", ")}`);
-          const stops = el("div", "spectrum__stops");
-          info.asks.forEach((t) => {
-            const s = el("div", "spectrum__stop"); s.setAttribute("aria-hidden", "true");
-            s.append(el("span", "spectrum__amt", `$${t.amount}`), el("span", "spectrum__lbl", t.label));
-            stops.append(s);
-          });
-          const bar = el("div", "spectrum__bar"); bar.setAttribute("aria-hidden", "true");
-          spec.append(bar, stops); yes.append(spec);
-        }
+        askBox = el("div"); yes.append(askBox);
         amount = el("input"); amount.type = "number"; amount.min = "0"; amount.step = "1"; amount.inputMode = "decimal";
         amount.value = prev.amount ?? "";
         field(yes, "how much are you sending? ($, 0 is fine)", amount);
@@ -240,40 +224,62 @@
       field(yes, info.plusOnes ? "bringing anyone else? (optional)" : "hoping to bring someone? (optional)", bring);
       const note = el("textarea"); note.rows = 5; note.value = prev.note || "";
       field(other, "your note", note);
+      const pickNight = el("button", "link", "or pick a night instead"); pickNight.type = "button";
+      pickNight.addEventListener("click", () => { current = "yes"; update(); });
+      other.append(pickNight);
 
       const btn = el("button", "btn"); btn.type = "button";
       const status = el("p", "status");
       const also = el("div", "also");
       a.append(btn, status, also);
 
+      // the night's ask, from the sheet, drawn as a range to read; nothing here fills the box
+      function drawAsks(asks) {
+        askBox.innerHTML = "";
+        if (!asks || !asks.length) return;
+        askBox.append(el("p", "label", "the ask for this night"));
+        const spec = el("figure", "spectrum");
+        spec.setAttribute("role", "img");
+        spec.setAttribute("aria-label", `the ask for this night: ${asks.map((t) => `$${t.amount} ${t.label}`).join(", ")}`);
+        const stops = el("div", "spectrum__stops");
+        asks.forEach((t) => {
+          const s = el("div", "spectrum__stop"); s.setAttribute("aria-hidden", "true");
+          s.append(el("span", "spectrum__amt", `$${t.amount}`), el("span", "spectrum__lbl", t.label));
+          stops.append(s);
+        });
+        const bar = el("div", "spectrum__bar"); bar.setAttribute("aria-hidden", "true");
+        spec.append(bar, stops); askBox.append(spec);
+      }
+
       function update() {
         choiceBtns.forEach(({ b, c }) => b.setAttribute("aria-pressed", String(c.key === current)));
         yes.hidden = current !== "yes";
         other.hidden = current !== "other";
         status.textContent = "";
-        const night = current === "yes" && sel ? sel.value : info.sessionId;
-        const opt = info.options.find((o) => o.id === night);
+        const night = current === "yes" ? sel.value : info.sessionId;
+        const opt = nights.find((o) => o.id === night);
         const m = menuOf(night);
-        const view = peek || night;
-        if (view !== shown) { shown = view; showMenu(menus, cardOf(view), menuOf(view)); }
-        also.innerHTML = "";
-        const look = (text, id) => {
-          const l = el("button", "link", text); l.type = "button";
-          l.addEventListener("click", () => { peek = id; update(); jump(); });
-          also.append(l);
-        };
-        if (peek) look(`back to the ${whenOf(night)} menu`, null);
-        nights.filter((o) => o.card && o.id !== view && o.id !== night && menuOf(o.id))
-          .forEach((o) => look(`also up: the ${whenOf(o.id)} menu \u00b7 ${o.card.theme.trim()}`, o.id));
-        if (seeMenu) {
-          const when = whenOf(night);
-          seeMenu.textContent = m ? `see the ${when} menu` : `no menu for ${when} yet`;
-          seeMenu.disabled = !m;
+        const when = whenOf(night);
+        const we = info.plusOnes ? "we’ll" : "i’ll";
+        if (night !== shown) {
+          shown = night;
+          showMenu(menus, cardOf(night), m);
+          if (askBox) drawAsks(opt && opt.asks || info.asks);
         }
+        if (hold) hold.textContent = `to hold your ${info.plusOnes ? "seats" : "seat"}, venmo what you can to @archipelaga with “${whenOf(sel.value)}” and your name in the note.`;
+        if (!paid) choiceBtns.find(({ c }) => c.key === "yes").b.textContent = `yes, ${we} be there ${whenOf(sel.value)}`;
+        also.innerHTML = "";
+        if (current === "yes") nights.filter((o) => o.card && o.id !== night && menuOf(o.id)).forEach((o) => {
+          const l = el("button", "link", `also up: the ${whenOf(o.id)} menu · ${o.card.theme.trim()}`); l.type = "button";
+          l.addEventListener("click", () => { sel.value = o.id; update(); jump(); });
+          also.append(l);
+        });
+        seeMenu.textContent = m ? `see the ${when} menu` : `no menu for ${when} yet`;
+        seeMenu.disabled = !m;
         if (current === "other") btn.textContent = "send";
         else if (current === "refund") btn.textContent = `confirm: refund my $${info.paid}`;
         else if (paid) btn.textContent = `confirm: put $${info.paid} toward ${opt.label}`;
-        else btn.textContent = `confirm: yes, ${info.plusOnes ? "we’ll" : "i’ll"} be there nov 9`;
+        else btn.textContent = `confirm: yes, ${we} be there ${when}`;
       }
       update();
 
@@ -283,7 +289,7 @@
         const checked = radios.find((r) => r.checked);
         const answer = {
           pick: current,
-          apply: !paid ? "" : current === "yes" ? sel.value : current,
+          apply: current === "yes" ? sel.value : paid ? current : "",
           note: current === "other" ? note.value : "",
           amount: !paid && current === "yes" ? amount.value : "",
           method: !paid && current === "yes" && checked ? checked.value : "",
