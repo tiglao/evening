@@ -55,6 +55,10 @@
     .choice { font: 600 13px/1.25 var(--font-mono); letter-spacing: .02em; padding: 12px 14px; min-height: 44px; text-align: left; color: var(--ink); background: var(--paper-bright); border: 1.5px solid var(--ink); cursor: pointer; }
     .choice[aria-pressed="true"] { color: var(--paper-bright); background: var(--ink); box-shadow: 3px 3px 0 var(--tomato); }
     .section[hidden] { display: none; }
+    .field.tight { margin-bottom: 6px; }
+    .link.see { margin: 0 0 18px; }
+    .link.see:disabled { color: var(--ink); text-decoration: none; cursor: default; opacity: .75; }
+    .card:focus { outline: none; }
     fieldset.radios { border: 0; padding: 0; min-width: 0; }
     .radios legend { padding: 0; }
     .radio { display: flex; align-items: center; gap: 10px; min-height: 36px; cursor: pointer; }
@@ -83,7 +87,7 @@
 </head>
 <body>
   <div class="wrap">
-    <aside class="card" aria-label="the menu">
+    <aside class="card" id="menu" aria-label="the menu" tabindex="-1">
       <p class="meta" id="meta"></p>
       <p class="kicker">a possible menu</p>
       <h1 id="theme"></h1>
@@ -114,35 +118,40 @@
     }
     function say(text) { const a = $("act"); a.innerHTML = ""; a.append(el("p", "hi", text)); }
 
-    // the same menu the site's card shows: MENUS in app.js, by session id, then by its old date key
-    async function showMenu(sessionId, oldKey) {
-      const list = $("items");
+    // the site's menus: MENUS in app.js, keyed by session id (or an old date key)
+    async function loadMenus() {
       try {
         const src = await (await fetch("app.js", { cache: "no-store" })).text();
         const a = src.indexOf("const MENUS = {"), b = src.indexOf("\n};", a);
-        const all = new Function(`return ${src.slice(a + 14, b + 2)}`)();
-        const m = all[sessionId] || all[oldKey];
-        list.innerHTML = "";
-        if (!m) { list.append(el("li", null, "menu still being written")); return; }
-        if (m.dek) { $("dek").textContent = m.dek; $("dek").hidden = false; }
-        (m.intro || []).forEach((p) => $("intro").append(el("p", null, p)));
-        (m.items || []).forEach((it) => {
-          const li = el("li");
-          if (it.kind === "tbd") li.append(el("span", "tbd", "??"));
-          else if (it.kind === "drink") { const p = el("p", "nm", it.name); p.append(el("span", "alt", ` // ${it.desc || ""}`)); li.append(p); }
-          else {
-            const p = el("p", "nm", it.name);
-            if (it.alt) p.append(el("span", "alt", ` / ${it.alt}`));
-            li.append(p);
-            if (it.sub) li.append(el("p", "sub", it.sub));
-            (it.lines || []).forEach((l) => li.append(el("p", null, l)));
-          }
-          list.append(li);
-        });
-      } catch {
-        list.innerHTML = "";
-        list.append(el("li", null, "the menu didn’t load. it’s on tiglao.github.io/evening."));
-      }
+        return new Function(`return ${src.slice(a + 14, b + 2)}`)();
+      } catch { return null; }
+    }
+    const menuFor = (menus, id, oldKey) => menus && (menus[id] || (oldKey && menus[oldKey])) || null;
+
+    // draws one night in the left column: its top lines from the sheet, its menu from app.js
+    function showMenu(menus, card, m) {
+      $("meta").textContent = card ? card.meta : "";
+      $("theme").textContent = card ? card.theme : "";
+      $("dek").hidden = true; $("intro").innerHTML = "";
+      const list = $("items"); list.innerHTML = "";
+      if (!menus) { list.append(el("li", null, "the menu didn\u2019t load. it\u2019s on tiglao.github.io/evening.")); return; }
+      if (!m) { list.append(el("li", null, "menu still being written")); return; }
+      if (m.dek) { $("dek").textContent = m.dek; $("dek").hidden = false; }
+      (m.intro || []).forEach((p) => $("intro").append(el("p", null, p)));
+      (m.items || []).forEach((it) => {
+        const li = el("li");
+        if (it.kind === "tbd") li.append(el("span", "tbd", "??"));
+        else if (it.kind === "drink") { const p = el("p", "nm", it.name); p.append(el("span", "alt", ` // ${it.desc || ""}`)); li.append(p); }
+        else {
+          const p = el("p", "nm", it.name);
+          if (it.alt) p.append(el("span", "alt", ` / ${it.alt}`));
+          li.append(p);
+          if (it.sub) li.append(el("p", "sub", it.sub));
+          (it.lines || []).forEach((l) => li.append(el("p", null, l)));
+        }
+        list.append(li);
+      });
+      $("menu").scrollTop = 0;
     }
 
     // the answer buttons come first, with the one clicked in the email already pressed.
@@ -150,7 +159,7 @@
     // guest who didn't, the ask, what they're sending and how (0 is fine). either can name
     // someone they hope to bring. something else opens a note; refund just confirms.
     // prev holds the last answer, so "change my answer" reopens the form as they left it.
-    function showForm(info, prev = {}) {
+    function showForm(info, menus, prev = {}) {
       const a = $("act"); a.innerHTML = "";
       a.append(el("p", "hi", `hi ${info.name},`));
       const paid = info.paid > 0;
@@ -170,13 +179,18 @@
       const yes = el("div", "section"), other = el("div", "section");
       a.append(yes, other);
 
-      let sel = null, amount = null, radios = [];
+      let sel = null, amount = null, radios = [], seeMenu = null, shown = null;
       if (paid) {
         sel = el("select");
         info.options.filter((o) => o.id !== "refund" && o.id !== "other").forEach((o) => {
-          const op = el("option", null, o.label); op.value = o.id; op.selected = o.id === (prev.apply || info.sessionId); sel.append(op);
+          const has = !!menuFor(menus, o.id, o.id === info.sessionId ? info.oldMenuKey : "");
+          const op = el("option", null, o.label + (has ? " \u00b7 menu\u2019s up" : "")); op.value = o.id; op.selected = o.id === (prev.apply || info.sessionId); sel.append(op);
         });
-        field(yes, `put your $${info.paid} toward`, sel);
+        field(yes, `put your $${info.paid} toward`, sel).classList.add("tight");
+        seeMenu = el("button", "link see", ""); seeMenu.type = "button";
+        // the menu column swaps on its own; on a phone it sits below the form, so this jumps to it
+        seeMenu.addEventListener("click", () => { const c = $("menu"); c.scrollIntoView({ behavior: "smooth", block: "start" }); c.focus({ preventScroll: true }); });
+        yes.append(seeMenu);
         sel.addEventListener("change", () => update());
       } else {
         yes.append(el("p", "paid", "to hold your seat, venmo what you can to @archipelaga with “nov 9” and your name in the note."));
@@ -227,9 +241,18 @@
         yes.hidden = current !== "yes";
         other.hidden = current !== "other";
         status.textContent = "";
+        const night = current === "yes" && sel ? sel.value : info.sessionId;
+        const opt = info.options.find((o) => o.id === night);
+        const m = menuFor(menus, night, night === info.sessionId ? info.oldMenuKey : "");
+        if (night !== shown) { shown = night; showMenu(menus, night === info.sessionId ? info.card : opt && opt.card, m); }
+        if (seeMenu) {
+          const when = opt ? opt.label.split(" \u00b7 ")[0].replace(/^\w+ /, "") : "";
+          seeMenu.textContent = m ? `see the ${when} menu` : `no menu for ${when} yet`;
+          seeMenu.disabled = !m;
+        }
         if (current === "other") btn.textContent = "send";
         else if (current === "refund") btn.textContent = `confirm: refund my $${info.paid}`;
-        else if (paid) btn.textContent = `confirm: put $${info.paid} toward ${sel.options[sel.selectedIndex].text}`;
+        else if (paid) btn.textContent = `confirm: put $${info.paid} toward ${opt.label}`;
         else btn.textContent = "confirm: yes, i’ll be there nov 9";
       }
       update();
@@ -256,7 +279,7 @@
             $("act").append(v);
           }
           const again = el("button", "link", "change my answer"); again.type = "button";
-          again.addEventListener("click", () => showForm(info, answer));
+          again.addEventListener("click", () => showForm(info, menus, answer));
           $("act").append(again);
         } catch {
           btn.disabled = false; update();
@@ -267,12 +290,13 @@
 
     (async () => {
       if (!g || !pick) { say("that link looks incomplete. reply to the email and tell me what works."); return; }
+      const menusP = loadMenus();
       let info;
       try { info = await call("info", { g, pick }); }
       catch { say("something went wrong loading this. reply to the email and tell me what works."); return; }
-      if (info.card) { $("meta").textContent = info.card.meta; $("theme").textContent = info.card.theme; }
-      showMenu(info.sessionId, info.oldMenuKey);
-      if (info.status === "ok") showForm(info); else say(info.message);
+      const menus = await menusP;
+      showMenu(menus, info.card, menuFor(menus, info.sessionId, info.oldMenuKey));
+      if (info.status === "ok") showForm(info, menus); else say(info.message);
     })();
   </script>
 </body>
