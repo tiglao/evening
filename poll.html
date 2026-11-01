@@ -57,6 +57,8 @@
     .section[hidden] { display: none; }
     .field.tight { margin-bottom: 6px; }
     .link.see { margin: 0 0 18px; }
+    .also { margin: 18px 0 0; }
+    .also .link { margin: 6px 0 0; text-align: left; }
     .link.see:disabled { color: var(--ink); text-decoration: none; cursor: default; opacity: .75; }
     .card:focus { outline: none; }
     fieldset.radios { border: 0; padding: 0; min-width: 0; }
@@ -170,7 +172,7 @@
       row.setAttribute("role", "group"); row.setAttribute("aria-label", "your answer");
       const choiceBtns = info.choices.map((c) => {
         const b = el("button", "choice", c.label); b.type = "button";
-        b.addEventListener("click", () => { current = c.key; update(); });
+        b.addEventListener("click", () => { current = c.key; peek = null; update(); });
         row.append(b); return { b, c };
       });
       a.append(row);
@@ -179,7 +181,15 @@
       const yes = el("div", "section"), other = el("div", "section");
       a.append(yes, other);
 
-      let sel = null, amount = null, radios = [], seeMenu = null, shown = null;
+      // every night with a menu up, so anyone can look at one without it changing their answer
+      const nights = info.nights || info.options;
+      const cardOf = (id) => id === info.sessionId ? info.card : (nights.find((o) => o.id === id) || {}).card;
+      const menuOf = (id) => menuFor(menus, id, id === info.sessionId ? info.oldMenuKey : "");
+      const whenOf = (id) => { const c = cardOf(id); return c ? c.meta.split(" \u00b7 ")[0].replace(/^\w+ /, "") : ""; };
+      // the menu column swaps on its own; on a phone it sits below the form, so this jumps to it
+      const jump = () => { const c = $("menu"); c.scrollIntoView({ behavior: "smooth", block: "start" }); c.focus({ preventScroll: true }); };
+
+      let sel = null, amount = null, radios = [], seeMenu = null, shown = null, peek = null;
       if (paid) {
         sel = el("select");
         info.options.filter((o) => o.id !== "refund" && o.id !== "other").forEach((o) => {
@@ -188,10 +198,9 @@
         });
         field(yes, `put your $${info.paid} toward`, sel).classList.add("tight");
         seeMenu = el("button", "link see", ""); seeMenu.type = "button";
-        // the menu column swaps on its own; on a phone it sits below the form, so this jumps to it
-        seeMenu.addEventListener("click", () => { const c = $("menu"); c.scrollIntoView({ behavior: "smooth", block: "start" }); c.focus({ preventScroll: true }); });
+        seeMenu.addEventListener("click", jump);
         yes.append(seeMenu);
-        sel.addEventListener("change", () => update());
+        sel.addEventListener("change", () => { peek = null; update(); });
       } else {
         yes.append(el("p", "paid", "to hold your seat, venmo what you can to @archipelaga with “nov 9” and your name in the note."));
         const qr = el("img", "qr"); qr.src = "venmo-qr.png"; qr.alt = "venmo qr code for @archipelaga"; qr.width = 180; qr.height = 180;
@@ -234,7 +243,8 @@
 
       const btn = el("button", "btn"); btn.type = "button";
       const status = el("p", "status");
-      a.append(btn, status);
+      const also = el("div", "also");
+      a.append(btn, status, also);
 
       function update() {
         choiceBtns.forEach(({ b, c }) => b.setAttribute("aria-pressed", String(c.key === current)));
@@ -243,10 +253,20 @@
         status.textContent = "";
         const night = current === "yes" && sel ? sel.value : info.sessionId;
         const opt = info.options.find((o) => o.id === night);
-        const m = menuFor(menus, night, night === info.sessionId ? info.oldMenuKey : "");
-        if (night !== shown) { shown = night; showMenu(menus, night === info.sessionId ? info.card : opt && opt.card, m); }
+        const m = menuOf(night);
+        const view = peek || night;
+        if (view !== shown) { shown = view; showMenu(menus, cardOf(view), menuOf(view)); }
+        also.innerHTML = "";
+        const look = (text, id) => {
+          const l = el("button", "link", text); l.type = "button";
+          l.addEventListener("click", () => { peek = id; update(); jump(); });
+          also.append(l);
+        };
+        if (peek) look(`back to the ${whenOf(night)} menu`, null);
+        nights.filter((o) => o.card && o.id !== view && o.id !== night && menuOf(o.id))
+          .forEach((o) => look(`also up: the ${whenOf(o.id)} menu \u00b7 ${o.card.theme.trim()}`, o.id));
         if (seeMenu) {
-          const when = opt ? opt.label.split(" \u00b7 ")[0].replace(/^\w+ /, "") : "";
+          const when = whenOf(night);
           seeMenu.textContent = m ? `see the ${when} menu` : `no menu for ${when} yet`;
           seeMenu.disabled = !m;
         }
