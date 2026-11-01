@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300..800;1,6..72,300..800&display=swap">
   <!--
     poll.html: the page the buttons in the nov 9 email open.
-    ?g=<guest id>&pick=<yes|refund|other>. nothing is saved until the guest presses
+    ?g=<guest id>&pick=<yes|refund|other|nights>. nothing is saved until the guest presses
     confirm (email scanners open every link). talks to the "evening date poll" apps script
     the same way app.js talks to Code.gs. the menu on the left is read from MENUS in app.js.
   -->
@@ -190,9 +190,11 @@
       const jump = () => { const c = $("menu"); c.scrollIntoView({ behavior: "smooth", block: "start" }); c.focus({ preventScroll: true }); };
 
       let amount = null, radios = [], hold = null, askBox = null, shown = null;
+      // the email's "choose another evening" opens here with the next night picked
+      const startNight = prev.apply || (pick === "nights" && (nights.find((o) => o.card && o.id !== info.sessionId) || {}).id) || info.sessionId;
       const sel = el("select");
       nights.filter((o) => o.card).forEach((o) => {
-        const op = el("option", null, o.label + (menuOf(o.id) ? " · menu’s up" : "")); op.value = o.id; op.selected = o.id === (prev.apply || info.sessionId); sel.append(op);
+        const op = el("option", null, o.label + (menuOf(o.id) ? " · menu’s up" : "")); op.value = o.id; op.selected = o.id === startNight; sel.append(op);
       });
       field(yes, paid ? `put your $${info.paid} toward` : "which night?", sel).classList.add("tight");
       const seeMenu = el("button", "link see", ""); seeMenu.type = "button";
@@ -282,6 +284,7 @@
         else btn.textContent = `confirm: yes, ${we} be there ${when}`;
       }
       update();
+      if (pick === "nights" && !prev.pick) sel.focus();
 
       btn.addEventListener("click", async () => {
         if (current === "other" && !note.value.trim()) { note.focus(); status.textContent = "write a note first."; return; }
@@ -318,7 +321,7 @@
       if (!g || !pick) { say("that link looks incomplete. reply to the email and tell me what works."); return; }
       const menusP = loadMenus();
       let info;
-      try { info = await call("info", { g, pick }); }
+      try { info = await call("info", { g, pick: pick === "nights" ? "yes" : pick }); }
       catch { say("something went wrong loading this. reply to the email and tell me what works."); return; }
       const menus = await menusP;
       showMenu(menus, info.card, menuFor(menus, info.sessionId, info.oldMenuKey));
