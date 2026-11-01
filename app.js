@@ -107,7 +107,7 @@ const MENUS = {
     intro: [
       "this is what thanksgiving (day of mourning) tastes like in a puerto rican house.",
       "thanksgiving arrived in the diaspora after the united states colonized our islas too. we could not stand the dry bird and the canned sides, so we made the day ours: a cheap turkey rubbed down like a lechón, a day off spent with the people we love, our own music, our own instruments, dominoes slapped down on a folding table. nothing about how we spend it is american except the date. this is a small way we practice resistance.",
-      "on november 16, that’s what we’re making for you. the ingredients will be out on the table for you to look at and touch. the achiote comes from my mother’s and my aunt’s garden. dance if you want. sit down at the dominoes table AND PLAY. eat a lot. come taste what our joy and our resilience taste like.",
+      "november 16 is that, for you. look at the ingredients on the table and touch them. the achiote came from my mother’s and my aunt’s garden. dance if you want. sit down at the dominoes table AND PLAY. eat a lot. this is what our joy and our resilience taste like.",
       "— jazz"
     ],
     items: [
