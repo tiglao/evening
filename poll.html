@@ -165,7 +165,7 @@
       const a = $("act"); a.innerHTML = "";
       a.append(el("p", "hi", `hi ${info.name},`));
       const paid = info.paid > 0;
-      if (paid) a.append(el("p", "paid", `you paid $${info.paid}.`));
+      if (paid) a.append(el("p", "paid", `you paid $${info.paid}${info.plusOnes ? ` for ${info.plusOnes + 1} seats` : ""}.`));
       let current = info.choices.some((c) => c.key === (prev.pick || pick)) ? (prev.pick || pick) : info.choices[0].key;
 
       const row = el("div", "choices");
@@ -202,7 +202,7 @@
         yes.append(seeMenu);
         sel.addEventListener("change", () => { peek = null; update(); });
       } else {
-        yes.append(el("p", "paid", "to hold your seat, venmo what you can to @archipelaga with “nov 9” and your name in the note."));
+        yes.append(el("p", "paid", `to hold your ${info.plusOnes ? "seats" : "seat"}, venmo what you can to @archipelaga with “nov 9” and your name in the note.`));
         const qr = el("img", "qr"); qr.src = "venmo-qr.png"; qr.alt = "venmo qr code for @archipelaga"; qr.width = 180; qr.height = 180;
         const open = el("a", "btn btn--ghost", "open venmo @archipelaga");
         open.href = "https://venmo.com/u/archipelaga"; open.target = "_blank"; open.rel = "noopener";
@@ -237,7 +237,7 @@
       }
       const bring = el("input"); bring.type = "text"; bring.maxLength = 200; bring.value = prev.bringing || "";
       bring.placeholder = "their name";
-      field(yes, "hoping to bring someone? (optional)", bring);
+      field(yes, info.plusOnes ? "bringing anyone else? (optional)" : "hoping to bring someone? (optional)", bring);
       const note = el("textarea"); note.rows = 5; note.value = prev.note || "";
       field(other, "your note", note);
 
@@ -273,7 +273,7 @@
         if (current === "other") btn.textContent = "send";
         else if (current === "refund") btn.textContent = `confirm: refund my $${info.paid}`;
         else if (paid) btn.textContent = `confirm: put $${info.paid} toward ${opt.label}`;
-        else btn.textContent = "confirm: yes, i’ll be there nov 9";
+        else btn.textContent = `confirm: yes, ${info.plusOnes ? "we’ll" : "i’ll"} be there nov 9`;
       }
       update();
 
