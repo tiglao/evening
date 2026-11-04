@@ -366,7 +366,7 @@ gateForm.addEventListener("input", (e) => {
 const STATUS_LABEL = {
   none: "not answered",
   maybe: "maybe",
-  yes: "yes · pay to hold",
+  yes: "yes · confirm to hold",
   confirmed: "seat confirmed",
   full: "full",
   cancelled: "night cancelled"
@@ -408,7 +408,7 @@ function renderNights(failed) {
     amt.setAttribute("aria-label", `${money(a.plate)} covers your plate, ${money(a.half)} half the crew's time, ${money(a.full)} everyone paid`);
     $('[data-bind="group-label"]', row).setAttribute("aria-label", `rsvp for ${when}, ${s.theme}`);
     $('[data-bind="pay"]', row).textContent =
-      `to hold your seat, venmo what you can (${money(a.plate)} to ${money(a.full)}, any amount is fine) with "${s.month} ${s.day} ${firstName(app.guest && app.guest.name)}" in the note.`;
+      `to hold your seat, venmo any amount with "${s.month} ${s.day} ${firstName(app.guest && app.guest.name)}" in the note, or reply to your reminder email to say you're coming. contributions are welcome and never required; $0 holds a seat the same as any amount.`;
     $('[data-action="venmo-pay"]', row).href = K.venmoUrl;
     const note = (app.guest && app.guest.notes && app.guest.notes[s.id]) || "";
     const noteInput = $('[data-bind="note"]', row);

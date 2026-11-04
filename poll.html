@@ -210,7 +210,7 @@
         askBox = el("div"); yes.append(askBox);
         amount = el("input"); amount.type = "number"; amount.min = "0"; amount.step = "1"; amount.inputMode = "decimal";
         amount.value = prev.amount ?? "";
-        field(yes, "how much are you sending? ($, 0 is fine)", amount);
+        field(yes, "how much are you sending? (optional, $0 is fine)", amount);
         const how = el("fieldset", "field radios");
         how.append(el("legend", "label", "how?"));
         radios = info.methods.map((m, i) => {
@@ -268,7 +268,7 @@
           showMenu(menus, cardOf(night), m);
           if (askBox) drawAsks(opt && opt.asks || info.asks);
         }
-        if (hold) hold.textContent = `to hold your ${info.plusOnes ? "seats" : "seat"}, venmo what you can to @archipelaga with “${whenOf(sel.value)}” and your name in the note.`;
+        if (hold) hold.textContent = `contributions are welcome and never required. if you'd like to give, venmo @archipelaga with “${whenOf(sel.value)}” and your name in the note. $0 holds your ${info.plusOnes ? "seats" : "seat"} the same as any amount.`;
         if (!paid) choiceBtns.find(({ c }) => c.key === "yes").b.textContent = `yes, ${we} be there ${whenOf(sel.value)}`;
         also.innerHTML = "";
         if (current === "yes") nights.filter((o) => o.card && o.id !== night && menuOf(o.id)).forEach((o) => {
