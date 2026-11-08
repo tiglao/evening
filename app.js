@@ -73,8 +73,7 @@ const MENUS = {
   "S05": {
     dek: "what we inherit, what we bring forth, our place in time",
     intro: [
-      "all souls’ day is the second day of undas. across the islands and the diaspora, families spend the night at the cemetery with candles, cards and food laid out on the graves, staying up with their dead.",
-      "and while our present experiences have us looking to who came before, someday, we’ll be the ones being visited. what people bring and what stories they tell will depend on what we do, create, relate.",
+      "while our present experiences have us looking to who came before, someday, we’ll be the ones being visited. what people bring and what stories they tell will depend on what we do, create, relate.",
       "we ask: what does it look like to be a good ancestor, especially in this time? what does it mean to decolonize the future? where do rest and fallow seasons fit?",
       "these are big questions without definitive answers. i don’t know what will come up when we ask them together, and that’s part of why i want to.",
       "on monday november 9, at 8 pm, come tell us: what have you received whole that you hope to hand on whole?"
@@ -84,7 +83,6 @@ const MENUS = {
       { name: "almusal", alt: "morning meal", lines: ["daing bangus (marinated and fried milkfish), ebun buru (salted duck egg), tomato, onion, rice"] },
       { name: "kare-kare", lines: ["oxtail and brisket, in a toasted rice and peanut sauce with annatto. eggplant, green beans, bokchoy. served with baguk (fermented shrimp paste)"] },
       { name: "nasi", alt: "steamed white rice" },
-      { name: "pan de muerto", sub: "to take home, by aly lopez" },
       { kind: "tbd" },
       { kind: "tbd" }
     ]
