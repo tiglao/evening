@@ -372,7 +372,7 @@ const STATUS_LABEL = {
   confirmed: "seat confirmed",
   full: "full",
   cancelled: "night cancelled",
-  past: "already happened"
+  past: "done"
 };
 // a night counts as past from 5 am the day after (late dinners run past midnight).
 // the sheet sends month and day only; the year is whichever puts the night within ~6 months of today.
