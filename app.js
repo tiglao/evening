@@ -15,7 +15,8 @@
     #view-gate[data-state]      boot | default | error | loading | failed
     .field[data-state]          default | error
     .profile-form[data-state]   idle | dirty | invalid | saving | saved | error   (#profile-form, #nl-form)
-    .night[data-status]         none | maybe | yes | confirmed | full | cancelled
+    .night[data-status]         none | maybe | yes | confirmed | full | cancelled | past
+                                (past = the night has happened: greyed out, no rsvp, menu still opens)
                                 (yes = said yes, not confirmed yet; confirmed = yes + a VENMO amount on the sheet)
     .night[data-state]          idle | saving | saved | error
     #confirm-remove[data-state] idle | removing | error
@@ -293,7 +294,10 @@ async function loadSessions() {
   try { r = await api.listSessions(app.token); } catch { r = { status: "offline" }; }
   if (r.status === "invalid") return false;
   if (r.status === "ok" && r.example) renderExample(r.example);
-  app.sessions = (r.sessions || []).map((s) => ({ ...s, menu: MENUS[s.id] || MENUS[menuKey(s)] || null }));
+  app.sessions = (r.sessions || []).map((s) => {
+    const past = isPast(s);
+    return { ...s, past, status: past ? "past" : s.status, menu: MENUS[s.id] || MENUS[menuKey(s)] || null };
+  });
   app.signers = r.signers || [];
   renderNights(r.status !== "ok");
   renderSigners();
@@ -367,10 +371,26 @@ const STATUS_LABEL = {
   yes: "yes · confirm to hold",
   confirmed: "seat confirmed",
   full: "full",
-  cancelled: "night cancelled"
+  cancelled: "night cancelled",
+  past: "already happened"
 };
+// a night counts as past from 5 am the day after (late dinners run past midnight).
+// the sheet sends month and day only; the year is whichever puts the night within ~6 months of today.
+const PAST_HOUR = 5;
+function isPast(s) {
+  const m = MONTHS.indexOf(String(s.month).toLowerCase());
+  const d = Number(s.day);
+  if (m < 0 || !d) return false;
+  const now = new Date();
+  let y = now.getFullYear();
+  const half = 182 * 86400000;
+  const at = (yr) => new Date(yr, m, d + 1, PAST_HOUR);
+  if (at(y) - now > half) y -= 1;
+  else if (now - at(y) > half) y += 1;
+  return now >= at(y);
+}
 // seats left, from the sheet's SEATS minus confirmed guests
-const spotsText = (s) => (s.spotsLeft == null || s.status === "cancelled" ? "" : s.spotsLeft > 0 ? ` · ${s.spotsLeft} of ${s.seats} seats left` : " · full");
+const spotsText = (s) => (s.spotsLeft == null || s.status === "cancelled" || s.past ? "" : s.spotsLeft > 0 ? ` · ${s.spotsLeft} of ${s.seats} seats left` : " · full");
 function renderNights(failed) {
   const list = $("#nights");
   list.innerHTML = "";
@@ -417,6 +437,7 @@ function renderNights(failed) {
     if (s.address) $('[data-bind="where"]', row).textContent = s.address;
     setNightStatus(row, s.status);
     setRowChoice(row, rsvps[s.id]);
+    if (s.past) $$('[data-rsvp], [data-action="save-note"], [data-bind="note"]', row).forEach((el) => { el.disabled = true; });
     list.append(row);
   });
 }
@@ -458,6 +479,7 @@ document.addEventListener("click", async (e) => {
   if (!btn || !app.guest) return;
   const unit = btn.closest("[data-rsvp-unit]");
   const id = unit.dataset.sessionId;
+  if (app.sessions.some((x) => x.id === id && x.past)) return;
   const value = btn.dataset.rsvp;
   const prev = app.guest.rsvps[id] || null;
   if (prev === value && unit.dataset.state !== "error") return;
@@ -474,7 +496,7 @@ document.addEventListener("click", async (e) => {
     app.guest.rsvps[id] = value;
     const s = app.sessions.find((x) => x.id === id);
     // a confirmed seat only changes when the sheet's VENMO changes; everything else follows the answer
-    if (s && s.status !== "confirmed" && s.status !== "cancelled" && s.status !== "full") {
+    if (s && !["confirmed", "cancelled", "full", "past"].includes(s.status)) {
       s.status = value === "yes" ? "yes" : value === "maybe" ? "maybe" : "none";
       const row = $(`.night[data-session-id="${id}"]`);
       if (row) setNightStatus(row, s.status);
@@ -553,6 +575,7 @@ function openMenu(id) {
   renderMenuItems($("#menu-items"), m.items || []);
   const foot = $("#menu-foot");
   foot.dataset.sessionId = id; foot.dataset.state = "idle";
+  foot.dataset.past = s.past ? "yes" : "no";
   $('[data-part="save-status"]', foot).textContent = "";
   $(".rsvp-opts", foot).setAttribute("aria-label", `rsvp for ${s.dow} ${s.month} ${s.day}, ${s.theme}`);
   setRowChoice(foot, (app.guest && app.guest.rsvps[id]) || null);

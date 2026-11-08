@@ -513,6 +513,18 @@ body[data-drawer="open"] { overflow: hidden; }
 .night__note-body input { flex: 1; min-width: 0; min-height: 44px; padding: 8px 10px; border: 1.5px solid var(--ink); border-radius: 0; background: var(--paper-bright); color: var(--ink); font: 400 16px/1.3 var(--font-serif); }
 .night__note-body input:focus { outline: none; border-color: var(--tomato); box-shadow: 2px 2px 0 0 var(--tomato); }
 .night[data-status="cancelled"] .night__note { display: none; }
+/* a night that already happened: greyed out, no rsvp or payment, menu still opens */
+.night[data-status="past"] { opacity: .55; }
+.night[data-status="past"] .night__date { background: transparent; border-color: var(--ink-3); }
+.night[data-status="past"] .rsvp-opts,
+.night[data-status="past"] .night__amounts,
+.night[data-status="past"] .night__pay,
+.night[data-status="past"] .night__confirmed,
+.night[data-status="past"] .night__note,
+.night[data-status="past"] .night__menu-none { display: none; }
+.badge[data-status="past"] { border-style: dashed; border-color: var(--ink-3); color: var(--ink-2); }
+.badge[data-status="past"]::before { content: "✓"; }
+.menu__foot[data-past="yes"] .menu__answer { display: none; }
 
 /* ---------- menus (hardcoded in app.js MENUS) ---------- */
 .night__menu { align-self: flex-start; min-height: 44px; margin: -8px 0 -6px; font-size: 13.5px; }   /* 44px tap target; negative margins keep the row spacing */
