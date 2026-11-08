@@ -523,7 +523,7 @@ body[data-drawer="open"] { overflow: hidden; }
 .night[data-status="past"] .night__note,
 .night[data-status="past"] .night__menu-none { display: none; }
 .badge[data-status="past"] { border-style: dashed; border-color: var(--ink-3); color: var(--ink-2); }
-.badge[data-status="past"]::before { content: "✓"; }
+.badge[data-status="past"]::before { content: none; }
 .menu__foot[data-past="yes"] .menu__answer { display: none; }
 
 /* ---------- menus (hardcoded in app.js MENUS) ---------- */
