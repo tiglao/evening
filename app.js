@@ -102,27 +102,55 @@ const MENUS = {
     ]
   },
   "S07": {
-    dek: "west african and taino roots in the puerto rican kitchen",
+    dek: "west african and taino roots in the puerto rican kitchen · everything is dairy-free",
     intro: [
       "this is what thanksgiving (day of mourning) tastes like in a puerto rican house.",
       "thanksgiving arrived in the diaspora after the united states colonized our islas too. we could not stand the dry bird and the canned sides, so we made the day ours: a cheap turkey rubbed down like a lechón, a day off spent with the people we love, our own music, our own instruments, dominoes slapped down on a folding table. nothing about how we spend it is american except the date. this is a small way we practice resistance.",
-      "november 16 is that, for you. look at the ingredients on the table and touch them. the achiote came from my mother’s and my aunt’s garden. dance if you want. sit down at the dominoes table AND PLAY. eat a lot. this is what our joy and our resilience taste like.",
+      "november 16 is that, for you. look at the ingredients on the table and touch them. the achiote came from my mother’s and my aunt’s garden. dance if you want. sit down at the dominoes table AND PLAY. eat a lot. everything tonight is dairy-free: coconut milk, vegan butter, vegan cheese. this is what our joy and our resilience taste like.",
       "— jazz"
     ],
     items: [
       { name: "plantain chips", lines: ["garlic mojo with lime and lemon."] },
       { name: "tostón cups", lines: ["twice-fried plantain, pico, shrimp a la criolla."] },
-      { name: "pavochón with mofongo stuffing", lines: ["turkey seasoned like a whole roast pig, stuffing made of green plantains fried and mashed with garlic, butter, chicharrón and seasonings, carved on banana leaf."] },
+      { name: "pavochón with mofongo stuffing", lines: ["turkey seasoned like a whole roast pig, stuffing made of green plantains fried and mashed with garlic, vegan butter, chicharrón and seasonings, carved on banana leaf."] },
       { name: "arroz con gandules", lines: ["rice and pigeon peas, fresh sofrito, achiote oil."] },
       { name: "guineos en escabeche", lines: ["boiled green bananas under pickled onion."] },
-      { name: "canoas de plátano", lines: ["sweet plantain boats, picadillo, cheese, cilantro-lime crema."] },
+      { name: "canoas de plátano", lines: ["sweet plantain boats, picadillo, vegan cheese, dairy-free cilantro-lime crema."] },
       { name: "ensalada de papa", lines: ["potato salad, our way."] },
       { name: "arroz con dulce", lines: ["spiced tea, coconut, rum-soaked raisins."] },
       { kind: "drink", name: "tamarindo", desc: "tamarind pod juice, over ice" },
       { kind: "drink", name: "coquito", desc: "coconut, rum, spice" },
       { kind: "drink", name: "ginger tea", desc: "ginger, cinnamon, clove, star anise" },
-      { kind: "drink", name: "cafecito", desc: "brewed in a greca" }
+      { kind: "drink", name: "cafecito", desc: "brewed in a greca" },
+      { kind: "drink", name: "cocktails", desc: "by jiin cruz" }
     ]
+  },
+  "S08": {
+    dek: "an iraqi family dinner from the land between the rivers",
+    intro: [
+      "a traditional family-style iraqi dinner, built on ingredients native to the region and locally raised lamb.",
+      "iraq, the region known as the cradle of agriculture, is home to the earliest written recipes. in a globalized food world, we’re honoring these dishes with a focus on the ingredients that belonged to the land before the colonization of the americas brought tomatoes, peppers and squash to asia and europe.",
+      "these recipes are rooted in our shared iraqi lineage, in stories from our elders, and in lala’s childhood in baghdad.",
+      "please bring your own bowl for the pacha.",
+      "aly lopez leads the kitchen tonight, with support from nubs.",
+      "— nubs and lala"
+    ],
+    items: [
+      { name: "dolma", alt: "iraqi style", sub: "known across southwest asia by many names, mahshi and yabragh among them.", lines: ["onions, chard and grape leaves stuffed with spiced rice and herbs, slow-cooked in a sour pomegranate-tamarind lamb broth (or a vegetarian one). the whole pot is flipped over at the table, maqlouba style."] },
+      { name: "pacha", sub: "bring your own bowl.", lines: ["a simple iraqi lamb broth."] },
+      { name: "iraqi pickles", lines: ["spiced cauliflower (turshi), pink turnips (mukhalal), and amba, pickled mango."] },
+      { name: "arugula salad" },
+      { name: "saffron panna cotta" },
+      { kind: "tbd" },
+      { kind: "drink", name: "basra tea", desc: "dried lime" }
+    ]
+  },
+  "S11": {
+    dek: "with aly lopez of open hearth gatherings",
+    intro: [
+      "aly is still shaping this one, so the menu is coming. if you caught her día de los muertos mushroom dinner last year, you know to say yes early."
+    ],
+    items: [{ kind: "tbd" }]
   }
 };
 const menuKey = (s) => `${String(s.month || "").toLowerCase()} ${Number(s.day) || s.day}`;
