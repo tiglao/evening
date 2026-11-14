@@ -330,6 +330,13 @@
           <button type="button" data-action="rsvp" data-rsvp="no" aria-pressed="false">no</button>
         </div>
         <p class="night__status" data-part="save-status" aria-live="polite"></p>
+        <div class="night__pay menu__pay" data-part="pay">
+          <p data-bind="pay"></p>
+          <span class="pay-btns">
+            <a class="btn btn--tomato btn--small" href="https://venmo.com/u/archipelaga" target="_blank" rel="noopener">venmo @archipelaga</a>
+            <a class="btn btn--ghost btn--small" href="https://cash.app/$archipelaga" target="_blank" rel="noopener">cash app $archipelaga</a>
+          </span>
+        </div>
       </div>
       <nav class="menu__nav" aria-label="other menus">
         <button id="menu-prev" class="linkish" type="button" data-action="menu-prev"></button>
@@ -368,7 +375,10 @@
         </div>
         <div class="night__pay" data-part="pay">
           <p data-bind="pay"></p>
-          <a class="btn btn--tomato btn--small" data-action="venmo-pay" href="https://venmo.com/u/archipelaga" target="_blank" rel="noopener">venmo @archipelaga</a>
+          <span class="pay-btns">
+            <a class="btn btn--tomato btn--small" data-action="venmo-pay" href="https://venmo.com/u/archipelaga" target="_blank" rel="noopener">venmo @archipelaga</a>
+            <a class="btn btn--ghost btn--small" data-action="cash-pay" href="https://cash.app/$archipelaga" target="_blank" rel="noopener">cash app $archipelaga</a>
+          </span>
         </div>
         <p class="night__confirmed" data-part="confirmed">✓ <span data-bind="where">you'll get an email with the address</span></p>
         <details class="night__note" data-part="note">

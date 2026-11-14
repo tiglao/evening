@@ -28,6 +28,7 @@ const CONFIG = {
   readKey: "evening.read",
   goodbyeMs: 2600,
   venmoUrl: "https://venmo.com/u/archipelaga",
+  cashUrl: "https://cash.app/$archipelaga",
   timeoutMs: 60000                // apps script can take 20 to 40 seconds when it's been idle
 };
 
@@ -131,8 +132,7 @@ const MENUS = {
       "a traditional family-style iraqi dinner, built on ingredients native to the region and locally raised lamb.",
       "iraq, the region known as the cradle of agriculture, is home to the earliest written recipes. in a globalized food world, we’re honoring these dishes with a focus on the ingredients that belonged to the land before the colonization of the americas brought tomatoes, peppers and squash to asia and europe.",
       "these recipes are rooted in our shared iraqi lineage, in stories from our elders, and in lala’s childhood in baghdad.",
-      "please bring your own bowl for the pacha.",
-      "aly lopez leads the kitchen tonight, with support from nubs.",
+      "please bring your own bowl for the pacha!",
       "— nubs and lala"
     ],
     items: [
@@ -452,9 +452,9 @@ function renderNights(failed) {
     amt.textContent = `${money(a.plate)} · ${money(a.half)} · ${money(a.full)}`;
     amt.setAttribute("aria-label", `${money(a.plate)} covers your plate, ${money(a.half)} half the crew's time, ${money(a.full)} everyone paid`);
     $('[data-bind="group-label"]', row).setAttribute("aria-label", `rsvp for ${when}, ${s.theme}`);
-    $('[data-bind="pay"]', row).textContent =
-      `to hold your seat, venmo any amount with "${s.month} ${s.day} ${firstName(app.guest && app.guest.name)}" in the note, or reply to your reminder email to say you're coming. contributions are welcome and never required; $0 holds a seat the same as any amount.`;
+    $('[data-bind="pay"]', row).textContent = payText(s);
     $('[data-action="venmo-pay"]', row).href = K.venmoUrl;
+    $('[data-action="cash-pay"]', row).href = K.cashUrl;
     const note = (app.guest && app.guest.notes && app.guest.notes[s.id]) || "";
     const noteInput = $('[data-bind="note"]', row);
     noteInput.value = note;
@@ -474,7 +474,10 @@ function setNightStatus(row, status) {
   b.dataset.status = status;
   b.textContent = STATUS_LABEL[status] || status;
 }
+const payText = (s) =>
+  `to hold your seat, send any amount by venmo or cash app with "${s.month} ${s.day} ${firstName(app.guest && app.guest.name)}" in the note, or reply to your reminder email to say you're coming. contributions are welcome and never required; $0 holds a seat the same as any amount.`;
 function setRowChoice(row, value) {
+  row.dataset.choice = value || "";
   $$("[data-rsvp]", row).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.rsvp === value)));
 }
 $("#nights").addEventListener("click", async (e) => {
@@ -528,6 +531,7 @@ document.addEventListener("click", async (e) => {
       const row = $(`.night[data-session-id="${id}"]`);
       if (row) setNightStatus(row, s.status);
     }
+    if (s) { const f = $(`#menu-foot[data-session-id="${id}"]`); if (f) f.dataset.status = s.status; }
     set("saved", "saved.", value);
   } else {
     set("error", "that didn't save. tap again?", prev);
@@ -603,6 +607,8 @@ function openMenu(id) {
   const foot = $("#menu-foot");
   foot.dataset.sessionId = id; foot.dataset.state = "idle";
   foot.dataset.past = s.past ? "yes" : "no";
+  foot.dataset.status = s.status || "none";
+  $('[data-bind="pay"]', foot).textContent = payText(s);
   $('[data-part="save-status"]', foot).textContent = "";
   $(".rsvp-opts", foot).setAttribute("aria-label", `rsvp for ${s.dow} ${s.month} ${s.day}, ${s.theme}`);
   setRowChoice(foot, (app.guest && app.guest.rsvps[id]) || null);

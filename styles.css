@@ -284,6 +284,8 @@ body[data-entry="returning"] .reread { display: block; }
 .night__confirmed { display: none; margin: 0; font: 500 var(--text-small)/1.4 var(--font-mono); color: var(--leaf); }
 .night__status { margin: 0; min-height: 15px; font: 500 11px/1.3 var(--font-mono); color: var(--ink-2); }
 .night[data-status="yes"] .night__pay { display: flex; }
+.pay-btns { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.menu__foot[data-choice="yes"]:not([data-status="confirmed"]):not([data-past="yes"]) .menu__pay { display: flex; }
 /* a full night: no new yeses (maybe still works), unless you already have a seat */
 .night[data-status="full"] [data-rsvp="yes"] { display: none; }
 .night[data-status="full"] .rsvp-opts { grid-template-columns: repeat(2, 1fr); }
