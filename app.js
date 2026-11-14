@@ -141,7 +141,6 @@ const MENUS = {
       { name: "iraqi pickles", lines: ["spiced cauliflower (turshi), pink turnips (mukhalal), and amba, pickled mango."] },
       { name: "arugula salad" },
       { name: "saffron panna cotta" },
-      { kind: "tbd" },
       { kind: "drink", name: "basra tea", desc: "dried lime" }
     ]
   },
