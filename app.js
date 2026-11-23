@@ -127,21 +127,21 @@ const MENUS = {
     ]
   },
   "S08": {
-    dek: "an iraqi family dinner from the land between the rivers",
+    dek: "fruits of the tigris · an iraqi family dinner from the land between the rivers",
     intro: [
       "a traditional family-style iraqi dinner, built on ingredients native to the region and locally raised lamb.",
       "iraq, the region known as the cradle of agriculture, is home to the earliest written recipes. in a globalized food world, we’re honoring these dishes with a focus on the ingredients that belonged to the land before the colonization of the americas brought tomatoes, peppers and squash to asia and europe.",
       "these recipes are rooted in our shared iraqi lineage, in stories from our elders, and in lala’s childhood in baghdad.",
-      "please bring your own bowl for the pacha!",
       "— nubs and lala"
     ],
     items: [
-      { name: "dolma", alt: "iraqi style", sub: "known across southwest asia by many names, mahshi and yabragh among them.", lines: ["onions, chard and grape leaves stuffed with spiced rice and herbs, slow-cooked in a sour pomegranate-tamarind lamb broth (or a vegetarian one). the whole pot is flipped over at the table, maqlouba style."] },
-      { name: "pacha", sub: "bring your own bowl.", lines: ["a simple iraqi lamb broth."] },
-      { name: "iraqi pickles", lines: ["spiced cauliflower (turshi), pink turnips (mukhalal), and amba, pickled mango."] },
-      { name: "arugula salad" },
-      { name: "saffron panna cotta" },
-      { kind: "drink", name: "basra tea", desc: "dried lime" }
+      { name: "shorbat addas", alt: "lentil soup", lines: ["preserved lemon, labne, olive oil."] },
+      { name: "mezze", lines: ["hummus and muhamarra, served with warm bread."] },
+      { name: "khudthra", lines: ["salted cucumbers and radishes with fresh herbs, for the whole table."] },
+      { name: "iraqi pickles", lines: ["cauliflower, turnips and mango."] },
+      { name: "dolma", alt: "iraqi style", lines: ["onions, chard and grape leaves stuffed with spiced rice and herbs, slow-cooked in a sour pomegranate and tamarind broth, with lamb or without. the whole pot is flipped at the table, maqlouba style, and served with garlic yogurt."] },
+      { name: "ba’be", sub: "a kind of iraqi kleicha.", lines: ["pastry filled with date paste, served with fresh fruit."] },
+      { kind: "drink", name: "two original mixed drinks", desc: "with or without alcohol" }
     ]
   },
   "S11": {
