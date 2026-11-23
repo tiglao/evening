@@ -135,11 +135,11 @@ const MENUS = {
       "— nubs and lala"
     ],
     items: [
+      { name: "dolma", alt: "iraqi style", lines: ["onions, chard and grape leaves stuffed with spiced rice and herbs, slow-cooked in a sour pomegranate and tamarind broth, with lamb or without. the whole pot is flipped at the table, maqlouba style, and served with garlic yogurt."] },
       { name: "shorbat addas", alt: "lentil soup", lines: ["preserved lemon, labne, olive oil."] },
       { name: "mezze", lines: ["hummus and muhamarra, served with warm bread."] },
       { name: "khudthra", lines: ["salted cucumbers and radishes with fresh herbs, for the whole table."] },
       { name: "iraqi pickles", lines: ["cauliflower, turnips and mango."] },
-      { name: "dolma", alt: "iraqi style", lines: ["onions, chard and grape leaves stuffed with spiced rice and herbs, slow-cooked in a sour pomegranate and tamarind broth, with lamb or without. the whole pot is flipped at the table, maqlouba style, and served with garlic yogurt."] },
       { name: "ba’be", sub: "a kind of iraqi kleicha.", lines: ["pastry filled with date paste, served with fresh fruit."] },
       { kind: "drink", name: "two original mixed drinks", desc: "with or without alcohol" }
     ]
