@@ -129,7 +129,7 @@ const MENUS = {
   "S08": {
     dek: "fruits of the tigris · an iraqi family dinner from the land between the rivers",
     intro: [
-      "please arrive at 7 pm. the night starts with cocktail hour at the bar, with drinks, mezze and pickles, and everything after builds from there.",
+      "please arrive at 7 pm. the night starts with cocktail hour at the bar: drinks, mezze, pickles, warm bread, and cucumbers and radishes with fresh herbs.",
       "a traditional family-style iraqi dinner, built on ingredients native to the region and locally raised lamb.",
       "iraq, the region known as the cradle of agriculture, is home to the earliest written recipes. in a globalized food world, we’re honoring these dishes with a focus on the ingredients that belonged to the land before the colonization of the americas brought tomatoes, peppers and squash to asia and europe.",
       "these recipes are rooted in our shared iraqi lineage, in stories from our elders, and in lala’s childhood in baghdad.",
